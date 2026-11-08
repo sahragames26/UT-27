@@ -275,44 +275,53 @@ $('#starter-continue').addEventListener('click', () => {
 
 
 const eventPlayers = [
-  {name:"Senne Lammens",rating:86,position:"GK",featured:true},
-  {name:"Marcos Llorente",rating:88,position:"RB",featured:true},
-  {name:"Diogo Travassos",rating:85,position:"RB",featured:true},
-  {name:"Alessandro Bastoni",rating:88,position:"CB",featured:true},
-  {name:"Matthias Ginter",rating:86,position:"CB",featured:false},
-  {name:"Fikayo Tomori",rating:86,position:"CB",featured:false},
-  {name:"Cristian Romero",rating:85,position:"CB",featured:false},
-  {name:"Maxim De Cuyper",rating:86,position:"LB",featured:false},
-  {name:"Ryan Gravenberch",rating:88,position:"CDM",featured:false},
-  {name:"Yui Hasegawa",rating:89,position:"CDM",featured:false},
-  {name:"Pedri",rating:91,position:"CM",featured:false},
-  {name:"Zambo Anguissa",rating:86,position:"CM",featured:false},
-  {name:"Gabri Veiga",rating:85,position:"CM",featured:false},
-  {name:"Lamine Camara",rating:85,position:"CM",featured:false},
-  {name:"Aitana Bonmatí",rating:90,position:"CM",featured:false},
-  {name:"Géraldine Reuteler",rating:86,position:"CM",featured:false},
-  {name:"Andreia Jacinto",rating:86,position:"CM",featured:false},
-  {name:"Jude Bellingham",rating:91,position:"CAM",featured:false},
-  {name:"Francisco Conceição",rating:87,position:"CAM",featured:false},
-  {name:"Matías Soulé",rating:85,position:"CAM",featured:false},
-  {name:"Younes Taha",rating:85,position:"CAM",featured:false},
-  {name:"Sakina Karchaoui",rating:88,position:"RM",featured:false},
-  {name:"Timothy Weah",rating:85,position:"RM",featured:false},
-  {name:"Ousmane Dembélé",rating:91,position:"RW",featured:false},
-  {name:"Luis Díaz",rating:90,position:"LM",featured:false},
-  {name:"Alyssa Thompson",rating:87,position:"LM",featured:false},
-  {name:"Jérémy Doku",rating:87,position:"LW",featured:false},
-  {name:"Rafael Leão",rating:87,position:"LW",featured:false},
-  {name:"Tabitha Chawinga",rating:89,position:"LW",featured:false},
-  {name:"Romelu Lukaku",rating:87,position:"ST",featured:false}
+  {name:"Ousmane Dembélé",rating:91,position:"ST",featured:true,club:"Paris SG",competition:"UCL",stats:[91,90,85,94,56,71]},
+  {name:"Jude Bellingham",rating:91,position:"CAM",featured:true,club:"Real Madrid",competition:"UCL",stats:[80,90,87,91,81,86]},
+  {name:"Pedri",rating:91,position:"CM",featured:true,club:"Barcelona",competition:"UCL",stats:[80,81,91,92,82,81]},
+  {name:"Luis Díaz",rating:90,position:"LM",featured:true,club:"Bayern Munich",competition:"UCL",stats:[88,86,87,90,47,78]},
+  {name:"Aitana Bonmatí",rating:90,position:"CM",club:"Barcelona",competition:"UWCL",stats:[83,85,86,90,80,73]},
+  {name:"Tabitha Chawinga",rating:89,position:"LW",club:"OL Lyonnes",competition:"UWCL",stats:[95,84,80,88,38,84]},
+  {name:"Yui Hasegawa",rating:89,position:"CDM",club:"Manchester City",competition:"UWCL",stats:[81,76,89,89,84,78]},
+  {name:"Ryan Gravenberch",rating:88,position:"CDM",club:"Liverpool",competition:"UCL",stats:[83,81,85,88,83,83]},
+  {name:"Marcos Llorente",rating:88,position:"RB",club:"Atlético Madrid",competition:"UCL",stats:[92,83,83,85,81,84]},
+  {name:"Alessandro Bastoni",rating:88,position:"CB",club:"Inter",competition:"UCL",stats:[82,49,81,80,88,84]},
+  {name:"Sakina Karchaoui",rating:88,position:"RM",club:"PSG",competition:"UWCL",stats:[90,79,88,89,81,74]},
+  {name:"Francisco Conceição",rating:87,position:"CAM",club:"Juventus",competition:"UEL",stats:[90,82,83,89,52,62]},
+  {name:"Jérémy Doku",rating:87,position:"LW",club:"Manchester City",competition:"UCL",stats:[92,81,81,90,43,78]},
+  {name:"Rafael Leão",rating:87,position:"LW",club:"Galatasaray",competition:"UCL",stats:[94,83,83,88,35,77]},
+  {name:"Romelu Lukaku",rating:87,position:"ST",club:"Fenerbahçe",competition:"UCL",stats:[83,88,80,82,47,87]},
+  {name:"Alyssa Thompson",rating:87,position:"LM",club:"Chelsea",competition:"UWCL",stats:[95,83,81,85,50,70]},
+  {name:"Géraldine Reuteler",rating:86,position:"CM",club:"Arsenal",competition:"UWCL",stats:[91,84,83,87,71,80]},
+  {name:"Andreia Jacinto",rating:86,position:"CM",club:"Real Madrid",competition:"UWCL",stats:[84,76,85,86,81,80]},
+  {name:"Senne Lammens",rating:86,position:"GK",club:"Manchester United",competition:"UCL",stats:[84,87,81,87,49,86]},
+  {name:"André-Frank Zambo Anguissa",rating:86,position:"CM",club:"Napoli",competition:"UCL",stats:[78,81,81,85,83,86]},
+  {name:"Fikayo Tomori",rating:86,position:"CB",club:"AC Milan",competition:"UEL",stats:[86,46,68,73,85,84]},
+  {name:"Maxim De Cuyper",rating:86,position:"LM",club:"Brighton",competition:"UECL",stats:[86,81,86,83,81,83]},
+  {name:"Matthias Ginter",rating:86,position:"CB",club:"Freiburg",competition:"UECL",stats:[78,63,75,74,88,84]},
+  {name:"Matías Soulé",rating:85,position:"RW",club:"Roma",competition:"UCL"},
+  {name:"Younes Taha",rating:85,position:"CAM",club:"Twente",competition:"UECL",stats:[86,85,85,84,51,75]},
+  {name:"Diogo Travassos",rating:85,position:"RB",club:"Braga",competition:"UECL",stats:[91,74,80,84,79,81]},
+  {name:"Cristian Romero",rating:85,position:"CB",club:"Getafe",competition:"UECL",stats:[82,38,60,70,85,89]},
+  {name:"Gabri Veiga",rating:85,position:"CM",club:"Porto",competition:"UCL"},
+  {name:"Lamine Camara",rating:85,position:"CM",club:"Monaco",competition:"UECL",stats:[84,74,86,84,81,80]},
+  {name:"Timothy Weah",rating:85,position:"RM",club:"Marseille",competition:"UEL",stats:[92,82,81,83,81,78]}
 ];
+const statLabels = ["PAC","SHO","PAS","DRI","DEF","PHY"];
 function buildPlayerCard(player,index,featured=false) {
   const card=document.createElement('button');
-  card.type='button'; card.className=`visual-player-card card-tone-${index%6}${featured?' featured':''}`;
+  card.type='button';
+  card.className=`visual-player-card card-tone-${index%6}${featured?' featured':''}`;
   card.setAttribute('aria-label',`فتح بطاقة ${player.name}، تقييم ${player.rating}`);
   card.dataset.playerIndex=String(index);
-  card.innerHTML=`<span class="card-rating">${player.rating}</span><span class="card-position">${player.position}</span><span class="card-portrait"></span><span class="card-player-name">${player.name}</span><span class="card-foot-mark">RTTK</span>`;
+  const stats=player.stats||[];
+  card.innerHTML=`<span class="card-rating">${player.rating}</span><span class="card-position">${player.position}</span><span class="card-portrait"></span><span class="card-player-name">${player.name}</span><span class="card-club">${player.club||''}</span><span class="card-stat-line">${stats.length===6?stats.map((v,i)=>statLabels[i]+' '+v).join(' · '):'RTTK • FC 27'}</span><span class="card-foot-mark">RTTK</span>`;
   card.addEventListener('click',()=>openPlayerModal(player,index));
+  card.addEventListener('pointermove',e=>{
+    const b=card.getBoundingClientRect(),x=(e.clientX-b.left)/b.width,y=(e.clientY-b.top)/b.height;
+    card.style.setProperty('--rx',((.5-y)*10).toFixed(2)+'deg');
+    card.style.setProperty('--ry',((x-.5)*12).toFixed(2)+'deg');
+  });
+  card.addEventListener('pointerleave',()=>{card.style.setProperty('--rx','0deg');card.style.setProperty('--ry','0deg');});
   return card;
 }
 function renderEventCards(){
@@ -320,7 +329,7 @@ function renderEventCards(){
   if(!grid||!featured)return;
   grid.replaceChildren();featured.replaceChildren();
   eventPlayers.forEach((p,i)=>grid.appendChild(buildPlayerCard(p,i)));
-  [23,17,10,24].forEach(i=>featured.appendChild(buildPlayerCard(eventPlayers[i],i,true)));
+  [0,1,2,3].forEach(i=>featured.appendChild(buildPlayerCard(eventPlayers[i],i,true)));
 }
 let selectedPlayer=null;
 function openPlayerModal(player,index){
@@ -434,8 +443,8 @@ $('#open-squad-battles').addEventListener('click', () => {
   difficultyPanel.classList.remove('hidden');
   difficultyPanel.scrollIntoView({behavior:'smooth', block:'nearest'});
 });
-$$$('[data-close-panel]').forEach(btn => btn.addEventListener('click', () => difficultyPanel.classList.add('hidden')));
-$$$('[data-difficulty]').forEach(btn => btn.addEventListener('click', () => {
+$('[data-close-panel]').forEach(btn => btn.addEventListener('click', () => difficultyPanel.classList.add('hidden')));
+$('[data-difficulty]').forEach(btn => btn.addEventListener('click', () => {
   $$('.difficulty-grid button').forEach(x => x.classList.remove('chosen'));
   btn.classList.add('chosen');
   selectedDifficulty = btn.dataset.difficulty;
@@ -473,7 +482,7 @@ function showPackModal(name, price) {
   $('#pack-modal').classList.remove('hidden');
 }
 $$('.pack-open').forEach(btn => btn.addEventListener('click', () => showPackModal(btn.dataset.pack, Number(btn.dataset.price))));
-$$$('[data-close-modal]').forEach(btn => btn.addEventListener('click', () => $('#pack-modal').classList.add('hidden')));
+$('[data-close-modal]').forEach(btn => btn.addEventListener('click', () => $('#pack-modal').classList.add('hidden')));
 $('#search-player').addEventListener('click', () => {
   const q = $('#player-search').value.trim();
   $('#market-results').innerHTML = q
