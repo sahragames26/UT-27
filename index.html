@@ -64,17 +64,17 @@
 
     <main id="main-content" class="main-content">
       <section class="page active" data-page="home">
-        <div class="welcome-line"><div><p class="eyebrow">WELCOME TO YOUR CLUB</p><h1>أهلاً بك في <span>UT 27</span></h1><p class="muted">كوّن فريقك وابدأ رحلتك في Ultimate Team</p></div><div class="club-emblem">27</div></div>
-        <div class="home-feature-grid">
-          <button class="feature-tile sbc-tile" data-open-tab="sbc"><span class="tile-kicker">SBC</span><strong>تحديات بناء التشكيلات</strong><span class="tile-art">✦</span><small>حوّل لاعبيك إلى مكافآت</small></button>
-          <button class="feature-tile objectives-tile" data-open-tab="objectives"><span class="tile-kicker">OBJECTIVES</span><strong>الأهداف والجوائز</strong><span class="tile-art">◎</span><small>أنجز المهام واربح المكافآت</small></button>
+        <div class="fc-home-heading"><div class="fc-brand"><span class="fc-shield">FUT</span><b>Main</b></div><div class="fc-home-status"><span>🪙 8K</span><span>💎 25</span><span>SP 3K/2K</span></div></div>
+        <div class="fc-home-grid">
+          <button class="fc-season-hero" data-open-tab="objectives">
+            <div class="fc-hero-copy"><span class="event-tag">ULTIMATE TEAM • SEASON 1</span><h1>الموسم 1: اللاعبون المتألقون</h1><p>انطلق إلى موسم جديد مع مكافآت اللاعبين المتألقين، واكتشف البطاقات والعناصر الحصرية والتحديات الجديدة.</p></div>
+            <div class="fc-card-showcase"><div class="fc-player-card"><b>83</b><span>CB</span><strong>DIOMANDÉ</strong></div><div class="fc-player-card second"><b>81</b><span>LW</span><strong>SUMMERVILLE</strong></div><div class="fc-pack-art">UT<br>27</div><div class="fc-green-card">✧</div></div>
+            <span class="fc-hero-hint">△  ●  •</span>
+          </button>
+          <button class="fc-side-panel" data-open-tab="store"><span class="fc-large-shield">FUT</span><small>المتجر والمكافآت</small></button>
         </div>
-        <button class="event-banner rttk-banner" data-open-tab="objectives"><div class="event-copy"><span class="event-tag">LIVE EVENT</span><h2>ROAD TO THE<br><b>KNOCKOUTS</b></h2><p>أظهر قوتك في طريق البطولات الأوروبية واجمع المكافآت</p><span class="event-cta">استكشف الحدث　›</span></div><div class="event-orb">★</div></button>
-        <button class="event-banner scream-banner" data-open-tab="store"><div class="event-copy"><span class="event-tag">SPECIAL CAMPAIGN</span><h2>ULTIMATE<br><b>SCREAM</b></h2><p>بطاقات خاصة وأجواء مرعبة في UT 27</p><span class="event-cta">اكتشف الباكات　›</span></div><div class="scream-art">☠</div></button>
-        <div class="section-heading"><h2>الوصول السريع</h2><span class="muted">اختر وجهتك</span></div>
-        <div class="quick-grid">
-          <button data-open-tab="play">⚽<b>اللعب</b></button><button data-open-tab="squad">👥<b>التشكيلة</b></button><button data-open-tab="transfers">⇄<b>الانتقالات</b></button><button data-open-tab="store">🛒<b>المتجر</b></button>
-        </div>
+        <div class="fc-home-footer"><button class="primary-btn" data-open-tab="play">ادخل إلى أنماط اللعب　✕</button><span>رجوع　◉</span></div>
+        <div class="fc-shortcuts"><button data-open-tab="play">اللعب</button><button data-open-tab="squad">النادي</button><button data-open-tab="sbc">SBC</button><button data-open-tab="transfers">الانتقالات</button><button data-open-tab="store">المتجر</button></div>
       </section>
 
       <section class="page" data-page="play">
@@ -113,7 +113,16 @@
   <div id="pack-modal" class="modal hidden"><div class="modal-card"><button class="modal-close" data-close-modal>✕</button><p class="eyebrow">PACK OPENING</p><div class="pack-reveal">UT<span>27</span></div><h2 id="pack-title">باك Gold</h2><p id="pack-message">تم فتح الباك بنجاح!</p><div class="reveal-player"><b>لاعب Gold</b><strong>80+</strong><small>عنصر تجريبي للعرض فقط</small></div><button class="primary-btn wide-btn" data-close-modal>متابعة</button></div></div>
 
   <div class="hud hidden" id="match-hud"><div class="scoreboard"><span>WHITE</span><strong id="score">0 - 0</strong><span>BLACK</span><small id="clock">00:00</small></div><div class="help">تحرك: WASD / الأسهم · تمرير: J · تسديد: K · تبديل اللاعب: Tab</div><div id="message">استحوذ على الكرة وابدأ اللعب</div><button id="leave-match" class="leave-match">العودة للقوائم</button></div>
-  <div class="mobile-controls hidden" id="match-controls"><div class="dpad"><button data-key="w">▲</button><div><button data-key="a">◀</button><button data-key="s">▼</button><button data-key="d">▶</button></div></div><div class="actions"><button data-action="pass">تمرير</button><button data-action="shoot" class="shoot">تسديد</button></div></div>
+  <div class="mobile-controls hidden" id="match-controls">
+    <div class="stick-zone"><div class="virtual-stick" id="virtual-stick"><div class="stick-ring"></div><div class="stick-knob" id="stick-knob"></div></div></div>
+    <div class="action-cluster">
+      <button class="action-btn through" data-action="through">بينية</button>
+      <button class="action-btn shoot" data-action="shoot">تسديد</button>
+      <button class="action-btn pass" data-action="pass">تمرير</button>
+      <button class="action-btn sprint" data-action="sprint">جري</button>
+      <button class="action-btn tackle" data-action="tackle">التحام</button>
+    </div>
+  </div>
   <script type="module" src="./src/main.js"></script>
 </body>
 </html>
