@@ -122,7 +122,9 @@ function makePlayer(team,x,z,height=1.8,stats={},card=null){
 }
 const players=[];
 const formationSlots=['GK','LB','CB1','CB2','RB','CM1','CM2','CM3','LW','ST','RW'];
-const formationPoints=[[0,45],[-25,29],[-9,31],[9,31],[25,29],[0,17],[-14,8],[14,8],[-23,-11],[0,-21],[23,-11]];
+const formationPresets={"4-3-3":[[0,45],[-25,29],[-9,31],[9,31],[25,29],[0,17],[-14,8],[14,8],[-23,-11],[0,-21],[23,-11]],"4-4-2":[[0,45],[-25,29],[-9,31],[9,31],[25,29],[-24,12],[-8,12],[8,12],[24,12],[-10,-20],[10,-20]],"4-2-3-1":[[0,45],[-25,29],[-9,31],[9,31],[25,29],[-12,17],[12,17],[-22,-5],[0,-8],[0,-25],[22,-5]],"4-3-2-1":[[0,45],[-25,29],[-9,31],[9,31],[25,29],[0,17],[-14,8],[14,8],[-12,-10],[0,-23],[12,-10]],"4-1-2-1-2":[[0,45],[-25,29],[-9,31],[9,31],[25,29],[0,20],[-18,7],[18,7],[0,-2],[-10,-22],[10,-22]],"4-4-1-1":[[0,45],[-25,29],[-9,31],[9,31],[25,29],[-24,12],[-8,12],[8,12],[24,12],[0,-5],[0,-24]],"4-2-2-2":[[0,45],[-25,29],[-9,31],[9,31],[25,29],[-12,18],[12,18],[-18,-3],[18,-3],[-9,-22],[9,-22]],"4-3-1-2":[[0,45],[-25,29],[-9,31],[9,31],[25,29],[0,17],[-14,8],[14,8],[0,-4],[-10,-23],[10,-23]],"4-5-1":[[0,45],[-25,29],[-9,31],[9,31],[25,29],[-25,9],[-12,14],[0,16],[12,14],[25,9],[0,-23]],"3-5-2":[[0,45],[-18,30],[0,33],[18,30],[-27,10],[-13,14],[0,17],[13,14],[27,10],[-10,-22],[10,-22]],"3-4-3":[[0,45],[-18,30],[0,33],[18,30],[-24,12],[-8,12],[8,12],[24,12],[-20,-16],[0,-22],[20,-16]],"3-4-1-2":[[0,45],[-18,30],[0,33],[18,30],[-24,12],[-8,12],[8,12],[24,12],[0,-3],[-10,-22],[10,-22]],"3-4-2-1":[[0,45],[-18,30],[0,33],[18,30],[-24,12],[-8,12],[8,12],[24,12],[-12,-7],[12,-7],[0,-24]],"5-3-2":[[0,45],[-30,30],[-15,32],[0,33],[15,32],[30,30],[-14,10],[0,15],[14,10],[-10,-22],[10,-22]],"5-4-1":[[0,45],[-30,30],[-15,32],[0,33],[15,32],[30,30],[-24,10],[-8,12],[8,12],[24,10],[0,-23]],"5-2-1-2":[[0,45],[-30,30],[-15,32],[0,33],[15,32],[30,30],[-12,14],[12,14],[0,-4],[-10,-22],[10,-22]],"5-2-3":[[0,45],[-30,30],[-15,32],[0,33],[15,32],[30,30],[-12,14],[12,14],[-20,-16],[0,-22],[20,-16]]};
+let selectedFormation=localStorage.getItem('ut27-formation')||'4-3-3';if(!formationPresets[selectedFormation])selectedFormation='4-3-3';
+let formationPoints=formationPresets[selectedFormation];
 let savedMatchClub=(()=>{try{return JSON.parse(localStorage.getItem('ut27-club')||'[]')}catch{return []}})();
 let savedMatchLineup=(()=>{try{return JSON.parse(localStorage.getItem('ut27-squad')||'{}')}catch{return {}}})();
 function matchCardForSlot(slot){const name=savedMatchLineup[slot];return savedMatchClub.find(p=>p.id===name||p.name===name)||null;}
@@ -140,6 +142,7 @@ function updatePlayerNameTag(p,card){
  const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:texture,transparent:true,depthTest:false,depthWrite:false}));
  sprite.position.set(0,2.85,0);sprite.scale.set(2.8,.52,1);sprite.renderOrder=10;p.group.add(sprite);p.nameTag=sprite;
 }
+function applyMatchFormation(){formationPoints=formationPresets[selectedFormation]||formationPresets['4-3-3'];white.forEach((p,i)=>{const [x,z]=formationPoints[i];p.homePosition.set(x,0,z);p.group.position.set(x,0,z);});}
 function refreshMatchRoster(){savedMatchClub=(()=>{try{return JSON.parse(localStorage.getItem('ut27-club')||'[]')}catch{return []}})();savedMatchLineup=(()=>{try{return JSON.parse(localStorage.getItem('ut27-squad')||'{}')}catch{return {}}})();white.forEach((p,i)=>{const card=matchCardForSlot(formationSlots[i]);p.card=card;p.cardName=card?.name||'';p.rating=card?.rating||70;const s=matchStats(card);Object.assign(p.stats,s);updatePlayerNameTag(p,card);});}
 let controlled=white[9], scoreW=0,scoreB=0,elapsed=0,ballOwner=null;
 const keys={};
@@ -260,7 +263,7 @@ function animate(){
  const keyX=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0);
  const keyZ=(keys.s||keys.arrowdown?1:0)-(keys.w||keys.arrowup?1:0);
  // Sideline camera mapping: stick right follows screen-right (pitch length), up moves away from the near touchline.
- const input=new THREE.Vector3(keyX-joystickInput.z,0,keyZ+joystickInput.x);
+ const input=new THREE.Vector3(keyX+joystickInput.z,0,keyZ-joystickInput.x);
  if(input.lengthSq()>0){input.clampLength(0,1);const stamina=controlled.stats.stamina/100;const moveSpeed=controlled.stats.speed*(sprinting?1.62:1)*(.76+.24*stamina);controlled.velocity.lerp(input.clone().multiplyScalar(moveSpeed),Math.min(1,dt*13));controlled.group.position.addScaledVector(controlled.velocity,dt);controlled.group.rotation.y=Math.atan2(input.x,input.z);if(sprinting)controlled.stats.stamina=Math.max(12,controlled.stats.stamina-13*dt);}
  else{controlled.velocity.multiplyScalar(Math.pow(.035,dt));controlled.stats.stamina=Math.min(100,controlled.stats.stamina+7*dt);}
  // Teammates make passing lanes and offer forward support instead of all chasing the ball.
@@ -424,6 +427,12 @@ const leaguePlayerPools={
   {name:'Khvicha Kvaratskhelia',rating:89,position:'LW',club:'Paris SG',nation:'Georgia',stats:[86,85,84,90,59,81],image:'https://assets.fodder.gg/renders/247635.webp'}
  ]
 };
+if(!localStorage.getItem('ut27-welcome-pack-claimed')){
+ const all=Object.entries(leaguePlayerPools).flatMap(([league,pool])=>pool.map(p=>({...p,league})));
+ const take=(arr,n)=>{const a=arr.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a.slice(0,n);};
+ const chosen=[...take(all.filter(p=>p.position==='GK'),1),...take(all.filter(p=>['LB','RB','CB','LWB','RWB'].includes(p.position)),4),...take(all.filter(p=>['CM','CDM','CAM','LM','RM'].includes(p.position)),3),...take(all.filter(p=>['LW','RW','ST','CF'].includes(p.position)),3)];
+ if(chosen.length===11){chosen.forEach((p,i)=>clubPlayers.push({...p,id:'welcome-'+Date.now()+'-'+i,tier:'Gold'}));saveClub();localStorage.setItem('ut27-welcome-pack-claimed','1');}
+}
 function makePackPlayers(league){
  const pool=(leaguePlayerPools[league]||[]).slice();
  for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]];}
@@ -503,22 +512,19 @@ function renderBench(){
   });
 }
 function renderSquad(){
-  $$( '#squad-pitch [data-slot]' ).forEach(btn=>{
-    const player=clubPlayers.find(p=>p.id===squadAssignments[btn.dataset.slot]||p.name===squadAssignments[btn.dataset.slot]);
-    btn.classList.toggle('selected',!!player);
-    btn.innerHTML=player?(player.image?'<img class="squad-player-photo" src="'+player.image+'" alt="'+player.name+'"><span><b>'+player.rating+'</b><small>'+player.name.split(' ').slice(-1)[0]+'</small></span>':'<b>'+player.rating+'</b><small>'+player.name.split(' ').slice(-1)[0]+'</small>'):btn.dataset.slot;
-  });
-  renderBench();
-  renderClubCollection();
-  const ratings=Object.values(squadAssignments).map(n=>clubPlayers.find(p=>p.id===n||p.name===n)?.rating||0);
-  const ratingLabel=document.querySelector('.page[data-page="squad"] .mode-count');
-  if(ratingLabel)ratingLabel.textContent='التقييم '+(ratings.length?Math.round(ratings.reduce((a,b)=>a+b,0)/ratings.length):0);
+ const select=$('#formation-select');if(select)select.value=selectedFormation;
+ const coords=formationPresets[selectedFormation]||formationPresets['4-3-3'];
+ $$('#squad-pitch [data-slot]').forEach((btn,i)=>{const player=clubPlayers.find(p=>p.id===squadAssignments[btn.dataset.slot]||p.name===squadAssignments[btn.dataset.slot]);const [x,z]=coords[i]||[0,0];btn.style.left=((x+38)/76*100)+'%';btn.style.top=((60-z)/120*100)+'%';btn.style.bottom='auto';btn.classList.toggle('selected',!!player);btn.innerHTML=player?'<span class="squad-token-rating">'+player.rating+'</span><span class="squad-token-position">'+player.position+'</span><span class="squad-token-name">'+player.name.split(' ').slice(-1)[0]+'</span>':'<span class="squad-token-empty">'+btn.dataset.slot+'</span>';});
+ const label=$('#formation-label');if(label)label.textContent=selectedFormation;renderBench();renderClubCollection();
+ const ratings=Object.values(squadAssignments).map(n=>clubPlayers.find(p=>p.id===n||p.name===n)?.rating||0);const ratingLabel=document.querySelector('.page[data-page="squad"] .mode-count');if(ratingLabel)ratingLabel.textContent='التقييم '+(ratings.length?Math.round(ratings.reduce((a,b)=>a+b,0)/ratings.length):0);
+ const count=formationSlots.filter(slot=>squadAssignments[slot]&&clubPlayers.some(p=>p.id===squadAssignments[slot]||p.name===squadAssignments[slot])).length;const gateNote=$('#squad-gate-note');if(gateNote)gateNote.textContent='التشكيلة: '+count+'/11 لاعب';
 }
+
 function openSquadPicker(slot){
   activeSquadSlot=slot;
   $('#squad-picker-title').textContent='اختيار لاعب لمركز '+slot;
   const list=$('#squad-picker-list');list.replaceChildren();
-  clubPlayers.filter(p=>(!Object.values(squadAssignments).includes(p.id)&&!Object.values(squadAssignments).includes(p.name)||squadAssignments[slot]===p.id||squadAssignments[slot]===p.name) && (p.position===slot || (slot.startsWith('CB')&&p.position==='CB') || (slot.startsWith('CM')&&['CM','CDM','CAM'].includes(p.position)) || (slot==='LW'&&['LW','LM'].includes(p.position)) || (slot==='RW'&&['RW','RM'].includes(p.position)) || (slot==='LB'&&['LB','LWB'].includes(p.position)) || (slot==='RB'&&['RB','RWB'].includes(p.position)) || (slot==='ST'&&['ST','CF'].includes(p.position)) || (slot==='GK'&&p.position==='GK'))).forEach(p=>{
+  clubPlayers.filter(p=>(!Object.values(squadAssignments).includes(p.id)&&!Object.values(squadAssignments).includes(p.name)||squadAssignments[slot]===p.id||squadAssignments[slot]===p.name)).forEach(p=>{
     const b=document.createElement('button');b.type='button';b.className='squad-pick-card';b.innerHTML=(p.image?'<img src="'+p.image+'" alt="" loading="lazy">':'')+'<span><b>'+p.rating+' OVR</b><br>'+p.name+'<br>'+p.position+'</span>';
     b.addEventListener('click',()=>{squadAssignments[slot]=p.id||p.name;localStorage.setItem('ut27-squad',JSON.stringify(squadAssignments));activeSquadSlot='';$('#squad-picker').classList.add('hidden');renderSquad();});list.appendChild(b);
   });
@@ -526,6 +532,8 @@ function openSquadPicker(slot){
   $('#squad-picker').classList.remove('hidden');
 }
 $$( '#squad-pitch [data-slot]' ).forEach(btn=>btn.addEventListener('click',()=>openSquadPicker(btn.dataset.slot)));
+$('#formation-select')?.addEventListener('change',e=>{selectedFormation=e.target.value;localStorage.setItem('ut27-formation',selectedFormation);renderSquad();});
+$('#save-squad-for-match')?.addEventListener('click',()=>{const count=formationSlots.filter(slot=>squadAssignments[slot]&&clubPlayers.some(p=>p.id===squadAssignments[slot]||p.name===squadAssignments[slot])).length;if(count<11){$('#squad-gate-note').textContent='كمّل اختيار 11 لاعب من النادي قبل دخول المباراة.';return;}$('#squad-match-gate').classList.add('hidden');switchTab('play');difficultyPanel.classList.remove('hidden');difficultyPanel.scrollIntoView({behavior:'smooth',block:'nearest'});});
 $('#close-squad-picker').addEventListener('click',()=>$('#squad-picker').classList.add('hidden'));
 $('#toggle-bench').addEventListener('click',()=>benchPanel.classList.toggle('collapsed'));
 renderSquad();
@@ -554,6 +562,7 @@ $$('[data-player-action]').forEach(btn=>btn.addEventListener('click',()=>{
 
 function switchTab(tab) {
   currentTab = tab;
+  if(tab==='squad'&&typeof renderSquad==='function')renderSquad();
   $$('.page').forEach(page => page.classList.toggle('active', page.dataset.page === tab));
   $$('.tab-btn, .bottom-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.tab === tab));
   if (tab === 'settings') $('#language-setting').value = localStorage.getItem('ut27-language') || 'ar';
@@ -613,10 +622,7 @@ $$('[data-sbc-tab]').forEach(btn => btn.addEventListener('click', () => {
   });
 }));
 
-$('#open-squad-battles').addEventListener('click', () => {
-  difficultyPanel.classList.remove('hidden');
-  difficultyPanel.scrollIntoView({behavior:'smooth', block:'nearest'});
-});
+$('#open-squad-battles').addEventListener('click',()=>{switchTab('squad');$('#squad-match-gate').classList.remove('hidden');$('#squad-match-gate').scrollIntoView({behavior:'smooth',block:'nearest'});});
 $$( '[data-close-panel]' ).forEach(btn => btn.addEventListener('click', () => difficultyPanel.classList.add('hidden')));
 $$( '[data-difficulty]' ).forEach(btn => btn.addEventListener('click', () => {
   $$('.difficulty-grid button').forEach(x => x.classList.remove('chosen'));
@@ -627,8 +633,10 @@ $$( '[data-difficulty]' ).forEach(btn => btn.addEventListener('click', () => {
 }));
 $('#start-match').addEventListener('click', () => {
   if (!selectedDifficulty) return;
+  const filled=formationSlots.filter(slot=>squadAssignments[slot]&&clubPlayers.some(p=>p.id===squadAssignments[slot]||p.name===squadAssignments[slot])).length;
+  if(filled<11){$('#difficulty-note').textContent='لازم تكمل الـ11 مركز في التشكيلة الأول.';return;}
   $('#difficulty-note').textContent = `بدأت المباراة على مستوى ${selectedDifficulty}`;
-  resetBall();elapsed=0;scoreW=0;scoreB=0;controlled=white[9];scoreEl.textContent='0 - 0';clockEl.textContent='00:00';
+  applyMatchFormation();resetBall();elapsed=0;scoreW=0;scoreB=0;controlled=white[9];scoreEl.textContent='0 - 0';clockEl.textContent='00:00';
   appShell.classList.add('hidden');
   gameRoot.classList.remove('game-hidden');
   matchHud.classList.remove('hidden');
