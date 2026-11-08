@@ -322,3 +322,21 @@ body,.app-shell{background-color:transparent}
  .main-tabs .tab-btn{padding:9px 5px;font-size:9px}
  .header-right .currency-strip span:nth-child(2){display:none}
 }
+
+
+/* RTTK official team graphic and four cropped featured player cards */
+.event-card-grid{display:flex!important;align-items:center;justify-content:center;min-height:0!important;height:100%!important}
+.event-promo-image{width:100%;height:100%;object-fit:contain;display:block}
+.promo-image-fallback{display:none;place-items:center}
+.featured-card-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));gap:9px;height:100%!important;min-height:0!important;background:transparent!important;overflow:hidden}
+.featured-player-crop{position:relative;min-width:0;min-height:0;overflow:hidden;border:1px solid #e5cf80;border-radius:10px;background:#0b1c2c;box-shadow:0 5px 16px #0008}
+.featured-player-crop img{position:absolute;width:1667%;max-width:none;height:auto;top:-146%;pointer-events:none}
+.featured-player-crop.bellingham img{left:-412%}
+.featured-player-crop.dembele img{left:-522%}
+.featured-player-crop.pedri img{left:-630%}
+.featured-player-crop.diaz img{left:-742%}
+.featured-player-crop:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 48%,#06111bdc 100%);pointer-events:none}
+.featured-player-crop>span,.featured-player-crop>b{position:absolute;z-index:2;left:5px;right:5px;text-align:center;text-shadow:0 2px 4px #000}
+.featured-player-crop>span{bottom:22px;font-size:clamp(9px,1vw,13px);font-weight:1000;color:#f4d982}
+.featured-player-crop>b{bottom:6px;font-size:clamp(8px,.9vw,12px);line-height:1.1}
+@media(max-width:850px){.event-card-grid{height:clamp(300px,45vh,430px)!important}.featured-card-grid{height:clamp(300px,45vh,430px)!important}}
