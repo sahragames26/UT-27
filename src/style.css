@@ -41,3 +41,94 @@
 .action-btn.sprint-tackle{grid-column:2;grid-row:2;width:112%;height:112%;border-radius:50%!important;background:linear-gradient(145deg,#d1a44c,#76501b)!important;font-size:clamp(10px,1.8vw,13px)!important;line-height:1.35;white-space:normal}
 .action-btn.sprint-tackle.pressed{filter:brightness(1.35);transform:scale(.94)}
 @media(max-width:700px){.action-btn.sprint-tackle{font-size:10px!important}}
+
+
+/* UT27 event-first menu system */
+.app-shell{
+  background:linear-gradient(180deg,rgba(5,13,24,.80),rgba(5,14,25,.74)),url("https://images.unsplash.com/photo-1522778119026-d647f0596c20?auto=format&fit=crop&w=2200&q=85") center/cover fixed;
+}
+.app-shell:before{
+  background:linear-gradient(180deg,rgba(3,10,19,.72) 0%,rgba(5,16,28,.52) 42%,rgba(3,10,18,.86) 100%),
+  linear-gradient(90deg,rgba(2,9,17,.55),transparent 35%,transparent 70%,rgba(2,9,17,.62));
+}
+.page{background:transparent}
+.fc-home-heading{margin-bottom:14px}
+.fc-brand{letter-spacing:1.5px}
+.fc-home-grid{grid-template-columns:minmax(0,1.9fr) minmax(230px,.8fr);align-items:stretch;gap:18px;min-height:0}
+.fc-season-hero{
+  min-height:0;padding:18px 18px 20px;
+  background:linear-gradient(135deg,rgba(8,22,39,.96),rgba(7,35,56,.92) 58%,rgba(8,17,31,.96));
+  border:1px solid rgba(177,212,231,.42);border-radius:12px;
+}
+.fc-season-hero:before{background:linear-gradient(120deg,transparent 25%,rgba(95,190,226,.12) 25.3%,transparent 26%,transparent 70%,rgba(224,190,104,.08) 70.3%,transparent 71%)}
+.fc-hero-copy{text-align:left;margin-bottom:16px}
+.fc-hero-copy h1{font-size:clamp(22px,2.4vw,32px);letter-spacing:.2px}
+.fc-hero-copy p{margin:0;color:#c1d1de;font-size:12px}
+.event-tag{color:#9ad7ef;letter-spacing:1.6px}
+.event-card-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:9px;align-items:center}
+.visual-player-card{
+  position:relative;isolation:isolate;overflow:hidden;aspect-ratio: .72;
+  min-width:0;border:1px solid rgba(235,224,185,.9);border-radius:7px;
+  padding:0;background:linear-gradient(150deg,#d9c88c 0%,#7d6c42 24%,#172d49 56%,#081322 100%);
+  box-shadow:0 5px 14px rgba(0,0,0,.5),inset 0 0 0 2px rgba(255,255,255,.11);
+  cursor:pointer;transition:transform .16s ease,filter .16s ease;
+}
+.visual-player-card:hover{transform:translateY(-5px) scale(1.025);filter:brightness(1.13)}
+.visual-player-card:before{content:"";position:absolute;inset:5px;border:1px solid rgba(255,255,255,.42);z-index:2;pointer-events:none}
+.card-glow{position:absolute;inset:0;background:linear-gradient(145deg,rgba(255,255,255,.4),transparent 35%,rgba(5,9,20,.28) 72%)}
+.card-portrait{
+  position:absolute;left:15%;right:15%;top:17%;bottom:15%;
+  background:linear-gradient(180deg,#e0c3a1 0 17%,#202a37 18% 30%,#e9eceb 31% 38%,#1a344e 39% 100%);
+  clip-path:polygon(35% 0,65% 0,72% 10%,91% 18%,100% 48%,82% 54%,78% 100%,22% 100%,18% 54%,0 48%,9% 18%,28% 10%);
+  filter:drop-shadow(0 5px 4px #0009);opacity:.92;
+}
+.card-portrait:before{content:"";position:absolute;left:28%;top:0;width:44%;height:19%;border-radius:48% 48% 42% 42%;background:linear-gradient(90deg,#986f51,#e0b28a 50%,#9c7658)}
+.card-portrait:after{content:"";position:absolute;left:17%;right:17%;top:36%;height:30%;background:linear-gradient(90deg,#152b45,#e5e8e6 50%,#152b45);opacity:.75}
+.card-foot-mark{position:absolute;bottom:7%;left:0;right:0;text-align:center;font-size:clamp(8px,.8vw,11px);font-weight:1000;letter-spacing:2px;color:#fff;text-shadow:0 2px 5px #000;z-index:3}
+.card-tone-1{background:linear-gradient(150deg,#f1e5bc,#b89a5c 27%,#25486b 62%,#101b32)}
+.card-tone-2{background:linear-gradient(150deg,#c8e9e6,#5b9b9b 28%,#233b5e 62%,#0c1a31)}
+.card-tone-3{background:linear-gradient(150deg,#e6d8c1,#a56c4c 28%,#473d68 62%,#111a32)}
+.card-tone-4{background:linear-gradient(150deg,#f0d9a4,#a98748 28%,#315c65 62%,#101c2d)}
+.card-tone-5{background:linear-gradient(150deg,#d6e4f0,#6b91b1 28%,#2e3c6a 62%,#10172d)}
+.fc-side-panel{
+  min-height:0;padding:18px 14px;display:flex;flex-direction:column;justify-content:center;gap:16px;
+  background:linear-gradient(155deg,rgba(10,27,47,.97),rgba(7,17,31,.96));
+  border:1px solid rgba(177,212,231,.38);border-radius:12px;
+}
+.featured-label{font-size:11px;letter-spacing:2px;color:#b6cbd9;text-align:center}
+.featured-card-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.visual-player-card.featured{width:100%;max-width:145px;justify-self:center;aspect-ratio:.72}
+.fc-home-footer{justify-content:flex-start;margin-top:14px}
+.fc-home-footer .primary-btn{border-radius:6px;background:linear-gradient(110deg,#d5e5ef,#83b9d2);color:#0c2033}
+.fc-home-footer .secondary-btn{border-radius:6px}
+.player-modal-card{background:linear-gradient(150deg,#142c46,#091525);border-color:#8ebbd0}
+.player-modal-art{height:190px;width:132px;margin:12px auto;border:2px solid #d9c78c;border-radius:10px;position:relative;overflow:hidden;background:linear-gradient(150deg,#dfd1a2,#79633c 27%,#254767 62%,#101a2d)}
+.player-modal-art:after{content:"";position:absolute;left:20%;right:20%;top:18%;bottom:10%;background:linear-gradient(180deg,#d6ad8a 0 18%,#1d2d3d 19% 30%,#e8e9e2 31% 38%,#17334e 39%);clip-path:polygon(35% 0,65% 0,72% 10%,91% 18%,100% 48%,82% 54%,78% 100%,22% 100%,18% 54%,0 48%,9% 18%,28% 10%)}
+.player-prompt{color:#c5d5e0;font-size:12px}
+.player-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:15px 0}
+.player-actions button{border:1px solid #ffffff35;background:#ffffff12;color:#fff;border-radius:8px;padding:11px 8px;font-weight:800}
+.player-actions button:hover{background:#b5d5e522;border-color:#a8d4e8}
+.page-heading,.section-heading{color:#fff}
+.objective-feature,.challenge-card,.task-card,.pack-card,.points-panel,.settings-list,.empty-state,.mode-card,.subpanel{
+  background:rgba(8,22,38,.84);border-color:rgba(180,211,229,.22)
+}
+.sub-tabs button.selected,.market-filters button.selected{background:#b7d6e5;color:#0b1b2b;border-color:#b7d6e5}
+.mode-art{background:radial-gradient(circle,#4c7892,#10253c 72%)}
+.objective-feature{background:linear-gradient(110deg,rgba(16,54,83,.96),rgba(13,38,59,.96))}
+@media(max-width:900px){
+  .fc-home-grid{grid-template-columns:minmax(0,1.65fr) minmax(180px,.8fr);gap:12px}
+  .event-card-grid{grid-template-columns:repeat(5,minmax(0,1fr));gap:7px}
+}
+@media(max-width:700px){
+  .fc-home-grid{grid-template-columns:minmax(0,1.45fr) minmax(112px,.72fr);gap:8px}
+  .fc-season-hero{padding:12px 9px}
+  .fc-hero-copy{text-align:center;margin-bottom:10px}
+  .fc-hero-copy h1{font-size:17px}
+  .fc-hero-copy p{font-size:10px}
+  .event-card-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+  .fc-side-panel{padding:12px 6px;gap:10px}
+  .featured-label{font-size:8px;letter-spacing:1px}
+  .featured-card-grid{gap:7px}
+  .visual-player-card:before{inset:3px}
+  .fc-home-footer{justify-content:center}
+}
