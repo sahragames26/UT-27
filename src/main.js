@@ -578,7 +578,7 @@ function showPackModal(name,price,league){
   coins-=price;localStorage.setItem('ut27-coins',String(coins));$('#coin-count').textContent=coins.toLocaleString('en-US');$('#store-coins').textContent=coins.toLocaleString('en-US');
   const items=makePackPlayers(league);clubPlayers.push(...items);saveClub();renderSquad();
   $('#pack-title').textContent=name;$('#pack-message').textContent='مبروك! طلعت لك '+items.length+' كروت Gold حقيقية من '+league+'. اتضافوا كلهم لناديك.';
-  items.forEach((p,index)=>{const b=document.createElement('button');b.type='button';b.className='pack-player-item';b.setAttribute('aria-label',p.name+' '+p.rating);
+  items.forEach((p,index)=>{const b=document.createElement('button');b.type='button';b.className='pack-player-item';b.style.animationDelay=(index*.09)+'s';b.setAttribute('aria-label',p.name+' '+p.rating);
    const img=document.createElement('img');img.src=p.image;img.alt=p.name+' Gold '+p.rating;img.loading='eager';img.onerror=()=>{img.remove();b.classList.add('card-image-fallback');b.innerHTML='<b>'+p.rating+'</b><strong>'+p.name+'</strong><small>'+p.position+'</small>';};
    b.appendChild(img);b.addEventListener('click',()=>openPlayerModal(p,index));reveal.appendChild(b);});
  }
