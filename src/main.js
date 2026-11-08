@@ -336,7 +336,8 @@ function buildPlayerCard(player,index,featured=false) {
 function renderEventCards(){
  const grid=$('#event-card-grid'),featured=$('#featured-card-grid');if(!grid||!featured)return;
  const teamImage='https://www.fifplay.com/img/public/fc-27-rttk-team-1.jpg';
- grid.innerHTML='<img class="event-promo-image" src="'+teamImage+'" alt="جميع بطاقات RTTK الثلاثين" loading="eager" onerror="this.style.display=\\'none\\';this.nextElementSibling.style.display=\\'grid\\'"><div class="promo-image-fallback">تعذر تحميل صورة الحدث</div>';
+ grid.innerHTML='<img class="event-promo-image" src="'+teamImage+'" alt="جميع بطاقات RTTK الثلاثين" loading="eager"><div class="promo-image-fallback">تعذر تحميل صورة الحدث</div>';
+ const eventImage=grid.querySelector('.event-promo-image');eventImage.addEventListener('error',()=>{eventImage.style.display='none';grid.querySelector('.promo-image-fallback').style.display='grid';});
  ['Jude Bellingham','Ousmane Dembélé','Pedri','Luis Díaz'].forEach(name=>{const index=eventPlayers.findIndex(p=>p.name===name);if(index>=0)featured.appendChild(buildPlayerCard(eventPlayers[index],index,true));});
 }
 
@@ -354,7 +355,7 @@ function openPlayerModal(player,index){
 function closePlayerModal(){$('#player-modal').classList.add('hidden');selectedPlayer=null;}
 renderEventCards();
 
-const squadAssignments = {};
+const squadAssignments = (()=>{try{return JSON.parse(localStorage.getItem('ut27-squad')||'{}')}catch{return {}}})();
 let activeSquadSlot = '';
 const benchPanel = $('#bench-panel');
 function renderBench(){
@@ -387,7 +388,7 @@ function openSquadPicker(slot){
   const list=$('#squad-picker-list');list.replaceChildren();
   clubPlayers.filter(p=>(!Object.values(squadAssignments).includes(p.name)||squadAssignments[slot]===p.name) && (p.position===slot || (slot.startsWith('CB')&&p.position==='CB') || (slot.startsWith('CM')&&['CM','CDM','CAM'].includes(p.position)) || (slot==='LW'&&['LW','LM'].includes(p.position)) || (slot==='RW'&&['RW','RM'].includes(p.position)) || (slot==='LB'&&['LB','LWB'].includes(p.position)) || (slot==='RB'&&['RB','RWB'].includes(p.position)) || (slot==='ST'&&['ST','CF'].includes(p.position)) || (slot==='GK'&&p.position==='GK'))).forEach(p=>{
     const b=document.createElement('button');b.type='button';b.innerHTML='<b>'+p.rating+' OVR</b><br>'+p.name+'<br>'+p.position;
-    b.addEventListener('click',()=>{squadAssignments[slot]=p.name;$('#squad-picker').classList.add('hidden');renderSquad();});list.appendChild(b);
+    b.addEventListener('click',()=>{squadAssignments[slot]=p.name;localStorage.setItem('ut27-squad',JSON.stringify(squadAssignments));$('#squad-picker').classList.add('hidden');renderSquad();});list.appendChild(b);
   });
   if(!list.children.length)list.innerHTML='<span class="bench-empty">لا يوجد لاعب مناسب لهذا المركز في النادي.</span>';
   $('#squad-picker').classList.remove('hidden');
