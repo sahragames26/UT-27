@@ -320,7 +320,7 @@ function renderEventCards(){
   if(!grid||!featured)return;
   grid.replaceChildren();featured.replaceChildren();
   eventPlayers.forEach((p,i)=>grid.appendChild(buildPlayerCard(p,i)));
-  [0,1,2,3].forEach(i=>featured.appendChild(buildPlayerCard(eventPlayers[i],i,true)));
+  [23,17,10,24].forEach(i=>featured.appendChild(buildPlayerCard(eventPlayers[i],i,true)));
 }
 let selectedPlayer=null;
 function openPlayerModal(player,index){
@@ -379,7 +379,16 @@ function moveQuick(delta) {
 }
 function chooseQuick() { if (!quickMenu.classList.contains('hidden')) activeQuickItems[quickIndex]?.click(); }
 $('#close-quick').addEventListener('click', closeQuick);
-$$('.quick-items button').forEach(btn => btn.addEventListener('click', () => switchTab(btn.dataset.tab)));
+$('#quick-menu-toggle').addEventListener('click', () => quickMenu.classList.contains('hidden') ? openQuick() : closeQuick());
+$('.quick-items button').forEach(btn => btn.addEventListener('click', () => switchTab(btn.dataset.tab)));
+$('[data-sbc-tab]').forEach(btn => btn.addEventListener('click', () => {
+  $('[data-sbc-tab]').forEach(x => x.classList.toggle('selected', x === btn));
+  const mode = btn.dataset.sbcTab;
+  $('#sbc-challenge-grid .challenge-card').forEach(card => {
+    const tag = card.querySelector('.event-tag')?.textContent.trim().toLowerCase() || '';
+    card.classList.toggle('hidden', mode === 'upgrades' ? !tag.includes('upgrade') : mode === 'challenges' ? tag.includes('upgrade') : false);
+  });
+}));
 
 $('#open-squad-battles').addEventListener('click', () => {
   difficultyPanel.classList.remove('hidden');
