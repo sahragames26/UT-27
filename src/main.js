@@ -5,8 +5,8 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x8ab2c2);
 scene.fog = new THREE.Fog(0x8ab2c2, 65, 150);
 
-const camera = new THREE.PerspectiveCamera(40, innerWidth/innerHeight, 0.1, 320);
-camera.position.set(82, 36, 0);
+const camera = new THREE.PerspectiveCamera(52, innerWidth/innerHeight, 0.1, 320);
+camera.position.set(43, 9.5, 0);
 const renderer = new THREE.WebGLRenderer({antialias:true, powerPreference:'high-performance'});
 renderer.setPixelRatio(Math.min(devicePixelRatio, 1.7));
 renderer.setSize(innerWidth, innerHeight);
@@ -63,7 +63,7 @@ for(const side of [-1,1]){
  const dummy=new THREE.Object3D();
  for(let n=0;n<420;n++){
   const row=Math.floor(n/70),col=n%70;
-  dummy.position.set(side*(39+row*1.0),7.1+row*.3,-57+col*1.62);
+  dummy.position.set(side*(49+row*.8),7.1+row*.3,-57+col*1.62);
   dummy.scale.set(.8,.8,.8);dummy.updateMatrix();crowd.setMatrixAt(n,dummy.matrix);
   crowd.setColorAt(n,new THREE.Color([0x78919b,0x9a7770,0xd2c7a1,0x456e69,0x343d54][(n*7+row)%5]));
  }
@@ -72,9 +72,9 @@ for(const side of [-1,1]){
 // Low-profile stadium stands and floodlight towers
 const standMat=mat(0x34424a), seatMat=mat(0x66747a);
 for(const side of [-1,1]){
-  box(scene,9,8,124,side*45,3,0,standMat);
-  for(let r=0;r<5;r++) box(scene,9,.24,124,side*(40+r*.95),7.2+r*.28,0,seatMat);
-  for(const z of [-46,-16,16,46]){box(scene,.4,20,.4,side*51,10,z,mat(0x25343a));box(scene,4.5,.3,2.2,side*51,20,z,mat(0xe9f3ff));}
+  box(scene,9,8,124,side*57,3,0,standMat);
+  for(let r=0;r<5;r++) box(scene,9,.24,124,side*(52+r*.95),7.2+r*.28,0,seatMat);
+  for(const z of [-46,-16,16,46]){box(scene,.4,20,.4,side*63,10,z,mat(0x25343a));box(scene,4.5,.3,2.2,side*63,20,z,mat(0xe9f3ff));}
 }
 for(const z of [-64,64]) box(scene,84,6,6,0,2,z,standMat);
 
@@ -140,6 +140,8 @@ let controlled=white[9], scoreW=0,scoreB=0,elapsed=0,ballOwner=null;
 const keys={};
 let joystickInput={x:0,z:0};
 let sprinting=false;
+let keeperRushUntil=0;
+let controlContext='attack';
 addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;if(e.key==='Tab'||e.key.toLowerCase()==='q'){e.preventDefault();switchPlayer();}});
 addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;if(e.key===' ')sprinting=false;});
 document.querySelectorAll('[data-key]').forEach(b=>{const k=b.dataset.key; b.addEventListener('pointerdown',e=>{e.preventDefault();keys[k]=true});['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev,()=>keys[k]=false));});
@@ -162,17 +164,19 @@ function releaseBallToward(target,speed,lift=1.4){
  const dir=target.clone().sub(ball.position);dir.y=0;if(dir.lengthSq()<.01)dir.set(0,0,-1);dir.normalize();
  ballOwner=null;ballVel.copy(dir.multiplyScalar(speed));ballVel.y=lift;
 }
-function passBall(){
- if(ballOwner!==controlled&&ball.position.distanceTo(controlled.group.position)>2.25){msg.textContent='لاعبك بعيد عن الكرة';return;}
+function passBall(mode='normal'){
+ if(ballOwner!==controlled){switchPlayer();msg.textContent='تبديل اللعب';return;}
  const target=forwardMate(),accuracy=THREE.MathUtils.clamp(controlled.stats.pass/100,.55,.98);
- const aim=target.group.position.clone().add(target.velocity.clone().multiplyScalar(.28));
+ const aim=target.group.position.clone().add(target.velocity.clone().multiplyScalar(mode==='run'?1.0:.28));
  aim.x+=(Math.random()-.5)*(1.8*(1-accuracy));aim.z+=(Math.random()-.5)*(1.2*(1-accuracy));
- releaseBallToward(aim,12+accuracy*7,1.1);msg.textContent='تمرير أرضي!';
+ const speed=mode==='power'?25+accuracy*5:mode==='run'?15+accuracy*5:13+accuracy*7;
+ const lift=mode==='lift'?.9:mode==='lob'?4.2:mode==='power'?.25:1.1;
+ releaseBallToward(aim,speed,lift);msg.textContent=mode==='power'?'تمريرة صاروخية!':mode==='run'?'تمرير وانطلاق!':mode==='lob'?'تمريرة عالية!':mode==='lift'?'تمريرة مرفوعة!':'تمرير أرضي!';
 }
-function throughBall(){
- if(ballOwner!==controlled&&ball.position.distanceTo(controlled.group.position)>2.5){msg.textContent='لاعبك بعيد عن الكرة';return;}
- const target=forwardMate(),lead=target.group.position.clone().add(target.velocity.clone().multiplyScalar(.75)).add(new THREE.Vector3(0,0,-(3+controlled.stats.pass/25)));
- releaseBallToward(lead,17+controlled.stats.pass*.055,2.4);msg.textContent='بينية في المساحة!';
+function throughBall(mode='ground'){
+ if(ballOwner!==controlled){if(mode==='keeper'){const keeper=white[0];keeperRushUntil=elapsed+2.2;msg.textContent='اندفاع الحارس!';}return;}
+ const target=forwardMate(),lead=target.group.position.clone().add(target.velocity.clone().multiplyScalar(.9)).add(new THREE.Vector3(0,0,-(3+controlled.stats.pass/25)));
+ releaseBallToward(lead,mode==='lob'?19+controlled.stats.pass*.06:17+controlled.stats.pass*.055,mode==='lob'?5.4:0.35);msg.textContent=mode==='lob'?'بينية عالية بالطول!':'بينية أرضية!';
 }
 function tackle(){
  const rival=black.slice().sort((a,b)=>a.group.position.distanceTo(controlled.group.position)-b.group.position.distanceTo(controlled.group.position))[0];
@@ -195,18 +199,35 @@ function shootBall(){
  releaseBallToward(target,17+power*15,2.8+power*2.2);msg.textContent='تسديدة على المرمى!';
 }
 addEventListener('keydown',e=>{if(e.repeat)return;if(e.key.toLowerCase()==='j')passBall();if(e.key.toLowerCase()==='k')shootBall();if(e.key.toLowerCase()==='i')throughBall();if(e.key.toLowerCase()===' ')sprinting=true;if(e.key.toLowerCase()==='e')tackle();});
-document.querySelector('[data-action="pass"]').addEventListener('pointerdown',e=>{e.preventDefault();passBall();});
-document.querySelector('[data-action="shoot"]').addEventListener('pointerdown',e=>{e.preventDefault();shootBall();});
-document.querySelector('[data-action="through"]').addEventListener('pointerdown',e=>{e.preventDefault();throughBall();});
+const passButton=document.querySelector('[data-action="pass"]');
+const shootButton=document.querySelector('[data-action="shoot"]');
+const throughButton=document.querySelector('[data-action="through"]');
 const sprintTackleButton=document.querySelector('[data-action="sprint-tackle"]');
+function updateTouchLabels(){
+ const attacking=ballOwner?.team==='white';
+ passButton.textContent=attacking?'تمرير':'تبديل اللعب';
+ shootButton.textContent=attacking?'تسديد':'زحلقة';
+ throughButton.textContent='بينية';
+ sprintTackleButton.textContent=attacking?'جري ومراوغة':'جري والتحام';
+}
+function bindSwipe(button,handler){
+ let start=null;
+ button.addEventListener('pointerdown',e=>{e.preventDefault();start={x:e.clientX,y:e.clientY,id:e.pointerId};button.setPointerCapture?.(e.pointerId);});
+ button.addEventListener('pointerup',e=>{if(!start||start.id!==e.pointerId)return;const dx=e.clientX-start.x,dy=e.clientY-start.y;const dir=Math.hypot(dx,dy)>18?(Math.abs(dx)>Math.abs(dy)?(dx<0?'left':'right'):(dy<0?'up':'down')):'tap';start=null;handler(dir);});
+ ['pointercancel','lostpointercapture'].forEach(ev=>button.addEventListener(ev,()=>start=null));
+}
+bindSwipe(passButton,dir=>{if(ballOwner!==controlled){switchPlayer();msg.textContent='تبديل اللعب';return;}passBall(dir==='left'?'power':dir==='down'?'lift':dir==='up'?'lob':dir==='right'?'run':'normal');});
+bindSwipe(throughButton,dir=>{if(ballOwner!==controlled){if(dir==='down')throughBall('keeper');else msg.textContent='استحوذ على الكرة لتنفيذ البينية';return;}throughBall(dir==='up'?'lob':'ground');});
+bindSwipe(shootButton,dir=>{if(ballOwner!==controlled){tackle();msg.textContent='زحلقة!';return;}shootBall();});
 let sprintTacklePointer=null;
 sprintTackleButton.addEventListener('pointerdown',e=>{
  e.preventDefault();sprintTacklePointer=e.pointerId;
  const nearestOpponent=black.reduce((best,p)=>!best||p.group.position.distanceTo(controlled.group.position)<best.group.position.distanceTo(controlled.group.position)?p:best,null);
- if(nearestOpponent && nearestOpponent.group.position.distanceTo(controlled.group.position)<2.7){tackle();sprinting=false;}
+ if(ballOwner!==controlled&&nearestOpponent&&nearestOpponent.group.position.distanceTo(controlled.group.position)<3.2){tackle();sprinting=false;}
  else {sprinting=true;sprintTackleButton.classList.add('pressed');}
 });
 function releaseSprintTackle(e){if(e.pointerId!==sprintTacklePointer)return;sprintTacklePointer=null;sprinting=false;sprintTackleButton.classList.remove('pressed');}
+updateTouchLabels();
 ['pointerup','pointerleave','pointercancel','lostpointercapture'].forEach(ev=>sprintTackleButton.addEventListener(ev,releaseSprintTackle));
 const stick=document.querySelector('#virtual-stick'),knob=document.querySelector('#stick-knob');
 let stickPointer=null;
@@ -236,7 +257,10 @@ const clock=new THREE.Clock();
 function animate(){
  requestAnimationFrame(animate);if(root.classList.contains('game-hidden'))return;const dt=Math.min(clock.getDelta(),.035);elapsed+=dt;
  // Human-controlled player
- const input=new THREE.Vector3((keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0)+joystickInput.x,0,(keys.s||keys.arrowdown?1:0)-(keys.w||keys.arrowup?1:0)+joystickInput.z);
+ const keyX=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0);
+ const keyZ=(keys.s||keys.arrowdown?1:0)-(keys.w||keys.arrowup?1:0);
+ // Sideline camera mapping: stick right follows screen-right (pitch length), up moves away from the near touchline.
+ const input=new THREE.Vector3(keyX-joystickInput.z,0,keyZ+joystickInput.x);
  if(input.lengthSq()>0){input.clampLength(0,1);const stamina=controlled.stats.stamina/100;const moveSpeed=controlled.stats.speed*(sprinting?1.62:1)*(.76+.24*stamina);controlled.velocity.lerp(input.clone().multiplyScalar(moveSpeed),Math.min(1,dt*13));controlled.group.position.addScaledVector(controlled.velocity,dt);controlled.group.rotation.y=Math.atan2(input.x,input.z);if(sprinting)controlled.stats.stamina=Math.max(12,controlled.stats.stamina-13*dt);}
  else{controlled.velocity.multiplyScalar(Math.pow(.035,dt));controlled.stats.stamina=Math.min(100,controlled.stats.stamina+7*dt);}
  // Teammates make passing lanes and offer forward support instead of all chasing the ball.
@@ -245,6 +269,7 @@ function animate(){
  const blackCarrier=ballOwner?.team==='black'?ballOwner:null;
  const pressing=new Set(black.slice().sort((a,b)=>a.group.position.distanceTo(ball.position)-b.group.position.distanceTo(ball.position)).slice(0,blackCarrier?2:3));
  for(const p of black){let target;if(p===blackCarrier)target=new THREE.Vector3(THREE.MathUtils.clamp(-p.group.position.x*.22,-18,18),0,58);else if(pressing.has(p))target=ball.position.clone().add(new THREE.Vector3(0,0,-1.15));else target=p.homePosition.clone().lerp(ball.position,.1);moveToward(p,target,dt,p.stats.speed*.82);p.stats.stamina=Math.min(100,p.stats.stamina+1.5*dt);}
+ if(ballOwner?.team==='black'&&elapsed<keeperRushUntil){const keeper=white[0];moveToward(keeper,new THREE.Vector3(ball.position.x,0,Math.min(54,ball.position.z+3)),dt,keeper.stats.speed*1.15);}
  // Keep players inside the pitch
  for(const p of players){p.group.position.x=THREE.MathUtils.clamp(p.group.position.x,-36,36);p.group.position.z=THREE.MathUtils.clamp(p.group.position.z,-56,56);for(const q of players)if(q!==p&&q.team!==p.team)resolveDuel(p,q);}
  // Ball possession, close control and grounded/aerial ball physics.
@@ -262,14 +287,17 @@ function animate(){
   const nearest=players.slice().sort((a,b)=>a.group.position.distanceTo(ball.position)-b.group.position.distanceTo(ball.position))[0];
   if(nearest&&nearest.group.position.distanceTo(ball.position)<1.2&&ballVel.length()<6){ballOwner=nearest;if(nearest.team==='white'){controlled=nearest;msg.textContent='استحوذت على الكرة';}else msg.textContent='الخصم استحوذ على الكرة';}
  }
+ // Contextual touch controls update immediately when possession changes.
+ const nextContext=ballOwner?.team==='white'?'attack':'defense';
+ if(nextContext!==controlContext){controlContext=nextContext;updateTouchLabels();}
  // Animate running limbs from each player's actual movement.
  for(const p of players){const motion=Math.min(1,p.velocity.length()/4),stride=Math.sin(elapsed*(sprinting&&p===controlled?17:13)+p.phase)*motion*.72;p.legs[0].rotation.x=stride;p.legs[1].rotation.x=-stride;p.arms[0].rotation.x=-stride*.58;p.arms[1].rotation.x=stride*.58;p.group.position.y=Math.abs(Math.sin(elapsed*13+p.phase))*.045*motion; p.group.rotation.z=THREE.MathUtils.clamp(-p.velocity.length()*.012,-.08,.08);}
  // Goals
  if(Math.abs(ball.position.z)>58 && Math.abs(ball.position.x)<4.9 && ball.position.y<3.25){if(ball.position.z<0)scoreW++;else scoreB++;scoreEl.textContent=`${scoreW} - ${scoreB}`;msg.textContent='GOAL!';resetBall();}
  if(Math.abs(ball.position.x)>39||Math.abs(ball.position.z)>63){resetBall();}
  // Low sideline broadcast camera: players and pitch read from a TV-style side angle.
- const focus=ball.position.clone().lerp(controlled.group.position,.24);const desired=new THREE.Vector3(focus.x+82,35,focus.z-3);
- camera.position.lerp(desired,Math.min(1,dt*1.65));camera.lookAt(focus.x,1.1,focus.z);
+ const focus=ball.position.clone().lerp(controlled.group.position,.24);const desired=new THREE.Vector3(focus.x+43,9.5,focus.z-3);
+ camera.position.lerp(desired,Math.min(1,dt*3.2));camera.lookAt(focus.x,1.05,focus.z);
  ball.rotation.x+=ballVel.z*dt*.8;ball.rotation.z-=ballVel.x*dt*.8;
  clockEl.textContent=`${String(Math.floor(elapsed/60)).padStart(2,'0')}:${String(Math.floor(elapsed%60)).padStart(2,'0')}`;
  renderer.render(scene,camera);
