@@ -340,3 +340,40 @@ body,.app-shell{background-color:transparent}
 .featured-player-crop>span{bottom:22px;font-size:clamp(9px,1vw,13px);font-weight:1000;color:#f4d982}
 .featured-player-crop>b{bottom:6px;font-size:clamp(8px,.9vw,12px);line-height:1.1}
 @media(max-width:850px){.event-card-grid{height:clamp(300px,45vh,430px)!important}.featured-card-grid{height:clamp(300px,45vh,430px)!important}}
+
+/* UT27 refinement */
+.brand-mark,.fc-home-heading,.sbc-side-shortcuts{display:none!important}
+.top-header,.header-left,.header-right{direction:ltr}
+.fc-home-grid{direction:ltr;grid-template-columns:minmax(0,1.8fr) minmax(240px,.82fr);gap:12px}
+.fc-season-hero,.fc-side-panel{direction:rtl}
+.fc-hero-copy{display:none!important}
+.event-card-grid{height:100%!important;min-height:0!important;flex:1;display:flex!important;align-items:stretch!important;justify-content:stretch!important;overflow:hidden!important;border-radius:12px}
+.event-promo-image{width:100%!important;height:100%!important;object-fit:cover!important;object-position:center!important}
+.featured-card-grid{height:100%!important;min-height:0!important;display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;grid-template-rows:repeat(2,minmax(0,1fr))!important;gap:8px!important;overflow:hidden!important}
+.featured-card-grid .visual-player-card{width:100%;height:100%;min-height:0;aspect-ratio:auto}
+.featured-card-grid .visual-player-card .card-portrait{top:16%;height:45%}
+.quick-menu-toggle{position:static!important;box-shadow:none!important}
+.page[data-page="squad"]{gap:6px}
+.page[data-page="squad"] .page-heading{margin:0}
+.page[data-page="squad"] .squad-toolbar{margin:0 auto 4px}
+.page[data-page="squad"] .pitch-board{height:min(34vh,285px);min-height:180px;flex:0 1 auto;margin:0 auto 5px}
+.page[data-page="squad"] .bench-panel{padding:6px}
+.page[data-page="squad"] .bench-list{padding:5px 0 1px}
+.club-collection{width:min(850px,100%);margin:0 auto;min-height:0;flex:1;overflow:hidden;background:#07131de8;border:1px solid #ffffff28;border-radius:10px;padding:7px}
+.club-collection-list{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:5px;max-height:100%;overflow:hidden}
+.club-card{display:flex;min-width:0;flex-direction:column;align-items:center;gap:2px;padding:5px 2px;border:1px solid #d5b85e;border-radius:7px;background:linear-gradient(145deg,#173448,#0b1928);color:#fff}
+.club-card>b{font-size:15px;color:#f2d47a}.club-card small{font-size:8px}.club-card strong{font-size:8px;line-height:1.1;text-align:center;overflow-wrap:anywhere}.club-card em{font-size:7px;color:#9fd3c8;font-style:normal}
+.pack-art{width:100%;height:180px!important;min-height:180px!important;max-width:118px;margin:0 auto 10px;border-radius:10px;display:flex;align-items:center;justify-content:center;writing-mode:vertical-rl;letter-spacing:3px;font-size:22px;font-weight:1000;box-shadow:0 12px 28px #0009,inset 0 0 0 2px #ffffff35;transform:perspective(500px) rotateY(-5deg)}
+.pack-grid{align-items:stretch}.pack-card{text-align:center}.pack-card p{min-height:28px}
+.pack-reveal-list{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;max-height:42vh;overflow:auto;padding:8px 2px}
+.pack-reveal-player{display:flex;min-width:0;flex-direction:column;align-items:center;gap:2px;padding:7px 3px;border:1px solid #d6b85d;border-radius:8px;background:linear-gradient(155deg,#244c5a,#0b1a2a);color:#fff}
+.pack-reveal-player>b{font-size:18px;color:#f4d77c}.pack-reveal-player>small{font-size:9px}.pack-reveal-player>strong{font-size:9px;text-align:center;overflow-wrap:anywhere}.pack-reveal-player>em{font-size:8px;color:#9fd6c9;font-style:normal}
+.page[data-page="store"] .page-heading{margin-bottom:8px}.page[data-page="store"] .pack-grid{min-height:0;flex:1}.page[data-page="store"] .pack-card{padding:10px}.page[data-page="store"] .pack-art{height:clamp(100px,24vh,190px)!important;min-height:100px!important}
+.page[data-page="home"] .fc-home-grid{height:100%;min-height:0}.page[data-page="home"] .fc-season-hero,.page[data-page="home"] .fc-side-panel{padding:9px;min-height:0}.page[data-page="home"] .fc-side-panel{display:flex;flex-direction:column}.page[data-page="home"] .featured-label{padding:3px 2px 6px}.page[data-page="home"] .fc-home-footer{display:none}
+.main-content{padding-top:8px!important;padding-bottom:8px!important}.page{gap:7px}.page-heading{margin-bottom:5px}.page-heading h1{font-size:clamp(18px,2vw,26px)}.page-heading p{margin:2px 0}
+.page[data-page="play"] .mode-list{flex:1;min-height:0}
+.page[data-page="objectives"] .task-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.page[data-page="objectives"] .task-card{padding:9px}.page[data-page="objectives"] .objective-feature{padding:12px;margin:0}.page[data-page="objectives"] .data-note{font-size:9px;margin:2px 0}
+.page[data-page="sbc"] .challenge-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.page[data-page="sbc"] .challenge-card{padding:10px;min-width:0}.page[data-page="sbc"] .challenge-card p{font-size:10px}
+.page[data-page="transfers"] .empty-state{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center}
+@media(max-width:900px){.club-collection-list{grid-template-columns:repeat(6,minmax(0,1fr))}.page[data-page="sbc"] .challenge-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.fc-home-grid{grid-template-columns:minmax(0,1.5fr) minmax(190px,.8fr)}}
+@media(max-width:700px){.fc-home-grid{grid-template-columns:minmax(0,1.35fr) minmax(115px,.8fr);gap:6px}.fc-season-hero,.fc-side-panel{padding:5px!important}.featured-card-grid{gap:4px!important}.featured-card-grid .visual-player-card .card-stat-line{display:none}.featured-card-grid .visual-player-card .card-player-name{font-size:8px}.club-collection-list{grid-template-columns:repeat(5,minmax(0,1fr))}.pack-reveal-list{grid-template-columns:repeat(4,minmax(0,1fr))}.page[data-page="objectives"] .task-list{grid-template-columns:repeat(2,minmax(0,1fr))}.top-header{direction:ltr}.header-left{min-width:0}.header-right{flex:0 0 auto}}
