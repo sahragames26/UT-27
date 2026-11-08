@@ -333,6 +333,46 @@ function openPlayerModal(player,index){
 }
 function closePlayerModal(){$('#player-modal').classList.add('hidden');selectedPlayer=null;}
 renderEventCards();
+
+const squadAssignments = {};
+let activeSquadSlot = '';
+const benchPanel = $('#bench-panel');
+function renderBench(){
+  const list=$('#bench-list'); if(!list)return;
+  const used=new Set(Object.values(squadAssignments));
+  const bench=eventPlayers.filter(p=>!used.has(p.name));
+  list.replaceChildren();
+  bench.slice(0,12).forEach(p=>{
+    const b=document.createElement('button');b.className='bench-player';b.type='button';
+    b.innerHTML='<b>'+p.rating+'</b><br>'+p.position+'<br>'+p.name.split(' ').slice(-1)[0];
+    b.addEventListener('click',()=>openSquadPicker(activeSquadSlot||p.position));
+    list.appendChild(b);
+  });
+}
+function renderSquad(){
+  $('#squad-pitch [data-slot]').forEach(btn=>{
+    const player=eventPlayers.find(p=>p.name===squadAssignments[btn.dataset.slot]);
+    btn.classList.toggle('selected',!!player);
+    btn.innerHTML=player?'<b>'+player.rating+'</b><small>'+player.name.split(' ').slice(-1)[0]+'</small>':btn.dataset.slot;
+  });
+  renderBench();
+}
+function openSquadPicker(slot){
+  activeSquadSlot=slot;
+  $('#squad-picker-title').textContent='اختيار لاعب لمركز '+slot;
+  const list=$('#squad-picker-list');list.replaceChildren();
+  eventPlayers.filter(p=>p.position===slot || (slot.startsWith('CB')&&p.position==='CB') || (slot.startsWith('CM')&&['CM','CDM','CAM'].includes(p.position)) || (slot==='LW'&&['LW','LM'].includes(p.position)) || (slot==='RW'&&['RW','RM'].includes(p.position)) || (slot==='LB'&&['LB','LWB'].includes(p.position)) || (slot==='RB'&&['RB','RWB'].includes(p.position)) || (slot==='ST'&&['ST','CF'].includes(p.position)) || (slot==='GK'&&p.position==='GK')).forEach(p=>{
+    const b=document.createElement('button');b.type='button';b.innerHTML='<b>'+p.rating+' OVR</b><br>'+p.name+'<br>'+p.position;
+    b.addEventListener('click',()=>{squadAssignments[slot]=p.name;$('#squad-picker').classList.add('hidden');renderSquad();});list.appendChild(b);
+  });
+  if(!list.children.length)list.innerHTML='<span class="bench-empty">لا يوجد لاعب مناسب لهذا المركز ضمن لاعبي الحدث.</span>';
+  $('#squad-picker').classList.remove('hidden');
+}
+$('#squad-pitch [data-slot]').forEach(btn=>btn.addEventListener('click',()=>openSquadPicker(btn.dataset.slot)));
+$('#close-squad-picker').addEventListener('click',()=>$('#squad-picker').classList.add('hidden'));
+$('#toggle-bench').addEventListener('click',()=>benchPanel.classList.toggle('collapsed'));
+renderSquad();
+
 $('#player-confirm').addEventListener('click',()=>{
   $('#player-actions').classList.remove('hidden');
   $('#player-confirm').classList.add('hidden');
