@@ -278,3 +278,27 @@ body,.app-shell{background-color:transparent}
 @media(max-width:760px){.mode-list{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.mode-card{display:flex;flex-direction:column}.mode-art{width:100%;height:70px;min-height:70px}.mode-info{padding:7px}.mode-info h2{font-size:12px}.mode-info p,.mode-meta{display:none}.mode-info .primary-btn{font-size:10px;padding:7px 4px}.header-quick-toggle span{display:none}.header-brand-group{gap:8px}}
 
 .promo-image-fallback{display:grid}
+
+
+/* Header rebuilt as one FC-style horizontal bar */
+.top-header{height:68px;min-height:68px;flex:0 0 68px;display:flex;flex-direction:row;direction:ltr;align-items:center;justify-content:space-between;gap:18px;padding:6px clamp(10px,1.8vw,28px);overflow:hidden;z-index:10}
+.header-left,.header-right{display:flex;align-items:center;min-width:0;gap:12px}
+.header-left{flex:1;direction:ltr}
+.header-right{flex:0 0 auto;direction:rtl}
+.header-left .brand-mark{flex:0 0 auto}
+.header-quick-toggle{position:static!important;flex:0 0 auto;white-space:nowrap}
+.top-header .main-tabs{position:static;display:flex;flex:1;min-width:0;overflow-x:auto;overflow-y:hidden;gap:2px;padding:0;background:transparent;border:0;direction:rtl;white-space:nowrap}
+.top-header .tab-btn{padding:12px 10px;font-size:12px}
+.currency-strip{gap:10px;font-size:12px;white-space:nowrap}
+.xp-chip{color:#d7c58d;font-size:11px}
+.profile-chip{flex:0 0 auto;white-space:nowrap}
+.quick-menu{position:fixed;top:74px;left:clamp(12px,2vw,28px);right:auto;z-index:50}
+#game-root{z-index:30}
+.hud{z-index:40}
+.mobile-controls{z-index:41}
+.app-shell{z-index:2}
+.fc-home-grid{direction:ltr;grid-template-columns:minmax(0,1.85fr) minmax(250px,.85fr)}
+.fc-season-hero{direction:rtl}
+.fc-side-panel{direction:rtl}
+@media(max-width:1050px){.top-header{gap:8px}.header-left,.header-right{gap:7px}.top-header .tab-btn{padding:10px 7px;font-size:11px}.currency-strip{gap:6px;font-size:10px}.xp-chip{display:none}}
+@media(max-width:760px){.top-header{height:auto;min-height:64px;flex-basis:auto;flex-wrap:wrap;justify-content:space-between;padding:6px 8px}.header-left{flex:1 1 100%;justify-content:flex-start}.header-right{flex:1 1 100%;justify-content:flex-end}.top-header .main-tabs{flex:1}.top-header .tab-btn{padding:7px 6px;font-size:10px}.header-quick-toggle{padding:7px 9px}.header-quick-toggle span{display:inline!important;font-size:10px}.brand-mark{font-size:25px}.currency-strip{font-size:10px}}
