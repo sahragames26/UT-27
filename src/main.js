@@ -371,11 +371,15 @@ function renderBench(){
 }
 function renderSquad(){
   $$( '#squad-pitch [data-slot]' ).forEach(btn=>{
-    const player=eventPlayers.find(p=>p.name===squadAssignments[btn.dataset.slot]);
+    const player=clubPlayers.find(p=>p.name===squadAssignments[btn.dataset.slot]);
     btn.classList.toggle('selected',!!player);
     btn.innerHTML=player?'<b>'+player.rating+'</b><small>'+player.name.split(' ').slice(-1)[0]+'</small>':btn.dataset.slot;
   });
   renderBench();
+  renderClubCollection();
+  const ratings=Object.values(squadAssignments).map(n=>clubPlayers.find(p=>p.name===n)?.rating||0);
+  const ratingLabel=document.querySelector('.page[data-page="squad"] .mode-count');
+  if(ratingLabel)ratingLabel.textContent='التقييم '+(ratings.length?Math.round(ratings.reduce((a,b)=>a+b,0)/ratings.length):0);
 }
 function openSquadPicker(slot){
   activeSquadSlot=slot;
@@ -385,7 +389,7 @@ function openSquadPicker(slot){
     const b=document.createElement('button');b.type='button';b.innerHTML='<b>'+p.rating+' OVR</b><br>'+p.name+'<br>'+p.position;
     b.addEventListener('click',()=>{squadAssignments[slot]=p.name;$('#squad-picker').classList.add('hidden');renderSquad();});list.appendChild(b);
   });
-  if(!list.children.length)list.innerHTML='<span class="bench-empty">لا يوجد لاعب مناسب لهذا المركز ضمن لاعبي الحدث.</span>';
+  if(!list.children.length)list.innerHTML='<span class="bench-empty">لا يوجد لاعب مناسب لهذا المركز في النادي.</span>';
   $('#squad-picker').classList.remove('hidden');
 }
 $$( '#squad-pitch [data-slot]' ).forEach(btn=>btn.addEventListener('click',()=>openSquadPicker(btn.dataset.slot)));
