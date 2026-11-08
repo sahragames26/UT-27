@@ -329,7 +329,7 @@ function buildPlayerCard(player,index,featured=false) {
 function renderEventCards(){
   const grid=$('#event-card-grid'),featured=$('#featured-card-grid');
   if(!grid||!featured)return;
-  grid.innerHTML='<img class="event-promo-image" src="https://fifplay.com/img/fc-27-rttk-team-1-players.jpg" alt="FC 27 RTTK Team 1 — full player squad" loading="eager" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'grid\'"><div class="promo-image-fallback">صورة فريق RTTK الكامل — بانتظار مصدر الصورة الأصلي</div>';
+  grid.innerHTML='<img class="event-promo-image" alt="FC 27 RTTK Team 1 — full player squad" loading="eager" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'grid\'"><div class="promo-image-fallback">صورة فريق RTTK الكامل — بانتظار مصدر الصورة الأصلي</div>';
   featured.innerHTML='<img class="featured-promo-image" src="https://fifplay.com/img/fc-27-rttk-team-1-players.jpg" alt="FC 27 RTTK featured players" loading="eager" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'grid\'"><div class="promo-image-fallback">صورة اللاعبين الأربعة المميزين — بانتظار الصورة الأصلية</div>';
 }
 let selectedPlayer=null;
