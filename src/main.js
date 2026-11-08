@@ -338,7 +338,13 @@ function renderEventCards(){
  const teamImage='https://www.fifplay.com/img/public/fc-27-rttk-team-1.jpg';
  grid.innerHTML='<img class="event-promo-image" src="'+teamImage+'" alt="جميع بطاقات RTTK الثلاثين" loading="eager"><div class="promo-image-fallback">تعذر تحميل صورة الحدث</div>';
  const eventImage=grid.querySelector('.event-promo-image');eventImage.addEventListener('error',()=>{eventImage.style.display='none';grid.querySelector('.promo-image-fallback').style.display='grid';});
- ['Jude Bellingham','Ousmane Dembélé','Pedri','Luis Díaz'].forEach(name=>{const index=eventPlayers.findIndex(p=>p.name===name);if(index>=0)featured.appendChild(buildPlayerCard(eventPlayers[index],index,true));});
+ const featuredCards=[
+  {name:'Jude Bellingham',url:'https://game-assets.fut.gg/cdn-cgi/image/quality%3D85%2Cwidth%3D300%2Cformat%3Dauto/2027/player-item/27-117692883.af95cec98e905362f438ec3549bb646aefd473f7826a316e42d9956f6a901ad7.webp'},
+  {name:'Ousmane Dembélé',url:'https://game-assets.fut.gg/cdn-cgi/image/quality%3D85%2Cwidth%3D300%2Cformat%3Dauto/2027/player-item/27-50563091.8c496ff388f0f46d0374afbf5ad42e1ce26a9a91aa7984080f758610cf049408.webp'},
+  {name:'Pedri',url:'https://game-assets.fut.gg/cdn-cgi/image/quality%3D85%2Cwidth%3D300%2Cformat%3Dauto/2027/player-item/27-50583502.09d055593de2c2d01ef7ac0fee7204e3c2e6a0cf0769dfd6f87f441726fe4f86.webp'},
+  {name:'Luis Díaz',url:'https://game-assets.fut.gg/cdn-cgi/image/quality%3D85%2Cwidth%3D300%2Cformat%3Dauto/2027/player-item/27-134458812.906510988135428b0e4749f6d043850e12b57180637cd8efaba5ff5801a74e8f.webp'}
+ ];
+ featuredCards.forEach(p=>{const card=document.createElement('div');card.className='featured-real-card';card.setAttribute('role','img');card.setAttribute('aria-label',p.name+' RTTK');const img=document.createElement('img');img.src=p.url;img.alt=p.name+' RTTK';img.loading='eager';img.onerror=()=>{card.classList.add('image-fallback');card.textContent=p.name+' • RTTK';};card.appendChild(img);featured.appendChild(card);});
 }
 
 let selectedPlayer=null;
