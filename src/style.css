@@ -156,3 +156,60 @@
 .sbc-tabs button{cursor:pointer}
 @media(max-width:900px){.fc-home-grid{height:62vh;min-height:360px;grid-template-columns:minmax(0,1.6fr) minmax(190px,.8fr)}.event-card-grid{grid-template-columns:repeat(5,minmax(0,1fr));grid-template-rows:repeat(6,minmax(0,1fr))}}
 @media(max-width:700px){.fc-home-grid{height:58vh;min-height:340px;grid-template-columns:minmax(0,1.4fr) minmax(105px,.72fr)}.event-card-grid{grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(10,minmax(0,1fr));gap:4px}.card-player-name{font-size:6px}.card-rating{font-size:11px}.sbc-layout{flex-direction:column}.sbc-side-shortcuts{min-width:0;width:100%}.quick-menu-toggle{right:10px;bottom:84px}}
+
+/* Fixed FC-style hub and compact pitch squad */
+html,body{height:100%;overflow:hidden}
+.app-shell{height:100dvh;min-height:0;display:flex;flex-direction:column;overflow:hidden;padding-bottom:0}
+.top-header{flex:0 0 58px}
+.main-tabs{flex:0 0 45px}
+.main-content{flex:1;min-height:0;overflow:hidden;width:100%;padding:12px clamp(12px,2vw,30px) 12px}
+.page{height:100%;min-height:0;overflow:hidden}
+.page.active{display:flex;flex-direction:column}
+.fc-home-heading{flex:0 0 auto;margin-bottom:10px}
+.fc-home-grid{flex:1;min-height:0;height:100%;grid-template-columns:minmax(0,1.8fr) minmax(230px,.9fr);gap:16px}
+.fc-season-hero,.fc-side-panel{min-height:0;height:100%}
+.fc-season-hero{padding:12px 16px}
+.event-card-grid{min-height:0;overflow:hidden;align-content:center}
+.fc-side-panel{padding:12px}
+.featured-card-grid{min-height:0;overflow:hidden}
+.fc-home-footer{flex:0 0 auto;margin-top:9px}
+.mode-list{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;min-height:0}
+.mode-card{min-height:0;height:100%;flex-direction:column}
+.mode-art{width:100%;height:90px;min-height:90px}
+.mode-info{padding:12px;min-height:0}
+.mode-info p{font-size:11px}
+.mode-info h2{font-size:18px}
+.page[data-page="play"] .page-heading{margin-bottom:4px}
+.page[data-page="play"] .sub-tabs{margin:5px 0 10px}
+.squad-toolbar{display:flex;justify-content:space-between;align-items:center;margin:0 auto 8px;width:min(570px,100%)}
+.pitch-board{height:min(52vh,430px);min-height:250px;flex:0 1 auto;margin:0 auto 8px;width:min(570px,100%)}
+.player-dot{padding:0;cursor:pointer}
+.player-dot.selected{background:linear-gradient(145deg,#6ce0cf,#087d72);color:#041a1b}
+.bench-panel{width:min(570px,100%);margin:0 auto;background:#07131de8;border:1px solid #ffffff28;border-radius:12px;padding:9px}
+.bench-head{display:flex;justify-content:space-between;gap:8px;font-size:12px}
+.bench-head small{color:#9eafc0}
+.bench-list{display:flex;gap:7px;overflow-x:auto;padding:8px 0 2px}
+.bench-empty{font-size:11px;color:#9eafc0}
+.bench-player{flex:0 0 68px;border:1px solid #d8b45d;background:linear-gradient(145deg,#203f50,#101a2a);border-radius:8px;padding:7px 4px;text-align:center;font-size:10px}
+.squad-picker-list{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;max-height:150px;overflow:auto}
+.squad-picker-list button{background:#12283a;border:1px solid #d9b65d;border-radius:8px;padding:8px 4px;font-size:10px}
+.page[data-page="squad"] .page-heading{margin-bottom:6px}
+@media(max-width:700px){
+ .app-shell{height:100dvh;padding-bottom:0}
+ .main-tabs{flex:0 0 40px}
+ .main-content{padding:8px 9px 8px}
+ .fc-home-grid{grid-template-columns:minmax(0,1.4fr) minmax(130px,.8fr);gap:7px}
+ .fc-season-hero{padding:8px}
+ .fc-hero-copy h1{font-size:17px}
+ .fc-side-panel{padding:7px}
+ .mode-list{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+ .mode-art{height:58px;min-height:58px;font-size:34px}
+ .mode-info{padding:7px}
+ .mode-info h2{font-size:12px}
+ .mode-info p,.mode-meta{display:none}
+ .mode-info .primary-btn{padding:7px 4px;font-size:10px}
+ .pitch-board{height:42vh;min-height:220px}
+ .bench-panel{padding:7px}
+ .squad-picker-list{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .bottom-nav{display:none}
+}
