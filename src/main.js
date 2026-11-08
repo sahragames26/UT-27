@@ -385,7 +385,7 @@ function openSquadPicker(slot){
   activeSquadSlot=slot;
   $('#squad-picker-title').textContent='اختيار لاعب لمركز '+slot;
   const list=$('#squad-picker-list');list.replaceChildren();
-  clubPlayers.filter(p=>p.position===slot || (slot.startsWith('CB')&&p.position==='CB') || (slot.startsWith('CM')&&['CM','CDM','CAM'].includes(p.position)) || (slot==='LW'&&['LW','LM'].includes(p.position)) || (slot==='RW'&&['RW','RM'].includes(p.position)) || (slot==='LB'&&['LB','LWB'].includes(p.position)) || (slot==='RB'&&['RB','RWB'].includes(p.position)) || (slot==='ST'&&['ST','CF'].includes(p.position)) || (slot==='GK'&&p.position==='GK')).forEach(p=>{
+  clubPlayers.filter(p=>(!Object.values(squadAssignments).includes(p.name)||squadAssignments[slot]===p.name) && (p.position===slot || (slot.startsWith('CB')&&p.position==='CB') || (slot.startsWith('CM')&&['CM','CDM','CAM'].includes(p.position)) || (slot==='LW'&&['LW','LM'].includes(p.position)) || (slot==='RW'&&['RW','RM'].includes(p.position)) || (slot==='LB'&&['LB','LWB'].includes(p.position)) || (slot==='RB'&&['RB','RWB'].includes(p.position)) || (slot==='ST'&&['ST','CF'].includes(p.position)) || (slot==='GK'&&p.position==='GK'))).forEach(p=>{
     const b=document.createElement('button');b.type='button';b.innerHTML='<b>'+p.rating+' OVR</b><br>'+p.name+'<br>'+p.position;
     b.addEventListener('click',()=>{squadAssignments[slot]=p.name;$('#squad-picker').classList.add('hidden');renderSquad();});list.appendChild(b);
   });
@@ -396,6 +396,7 @@ $$( '#squad-pitch [data-slot]' ).forEach(btn=>btn.addEventListener('click',()=>o
 $('#close-squad-picker').addEventListener('click',()=>$('#squad-picker').classList.add('hidden'));
 $('#toggle-bench').addEventListener('click',()=>benchPanel.classList.toggle('collapsed'));
 renderSquad();
+if(localStorage.getItem('ut27-starter-done')==='yes'&&!localStorage.getItem('ut27-starter-claimed')&&clubPlayers.length===0)showPackModal('Starter Pack',0,'starter');
 
 $('#player-confirm').addEventListener('click',()=>{
   $('#player-actions').classList.remove('hidden');
