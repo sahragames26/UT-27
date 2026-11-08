@@ -7,6 +7,7 @@ scene.fog = new THREE.Fog(0x8ab2c2, 65, 150);
 
 const camera = new THREE.PerspectiveCamera(52, innerWidth/innerHeight, 0.1, 320);
 camera.position.set(43, 9.5, 0);
+camera.lookAt(0, 1.15, 0);
 const renderer = new THREE.WebGLRenderer({antialias:true, powerPreference:'high-performance'});
 renderer.setPixelRatio(Math.min(devicePixelRatio, 1.7));
 renderer.setSize(innerWidth, innerHeight);
@@ -112,7 +113,11 @@ function makePlayer(team,x,z,height=1.8,stats={},card=null){
   const boot=sphere(new THREE.BoxGeometry(.16*scale,.105*scale,.29*scale),boots,0,-.48*scale,.09*scale);legPivot.add(boot);legs.push(legPivot);
  }
  group.rotation.y=home?Math.PI:0;
- const player={group,team,card,cardName:card?.name||'',rating:card?.rating||70,homePosition:group.position.clone(),legs,arms,phase:Math.random()*Math.PI*2,stats:{speed:stats.speed??7.2,strength:stats.strength??70,agility:stats.agility??70,stamina:stats.stamina??100,shoot:stats.shoot??70,pass:stats.pass??70},velocity:new THREE.Vector3(),height,hasBall:false};
+ const selectionMarker=new THREE.Group();
+ const markerRing=new THREE.Mesh(new THREE.TorusGeometry(.58,.055,8,40),new THREE.MeshBasicMaterial({color:0xffdf45,transparent:true,opacity:.98,depthTest:false}));markerRing.rotation.x=Math.PI/2;markerRing.position.y=.055;markerRing.renderOrder=20;selectionMarker.add(markerRing);
+ const arrowGeometry=new THREE.BufferGeometry();arrowGeometry.setAttribute('position',new THREE.Float32BufferAttribute([0,2.85,0,0,2.5,0,-.2,2.68,0,0,2.5,0,.2,2.68,0,0,2.5,0],3));
+ const arrow=new THREE.LineSegments(arrowGeometry,new THREE.LineBasicMaterial({color:0xffdf45,depthTest:false}));arrow.renderOrder=21;selectionMarker.add(arrow);selectionMarker.visible=false;group.add(selectionMarker);
+ const player={group,team,card,cardName:card?.name||'',rating:card?.rating||70,homePosition:group.position.clone(),legs,arms,selectionMarker,phase:Math.random()*Math.PI*2,stats:{speed:stats.speed??7.2,strength:stats.strength??70,agility:stats.agility??70,stamina:stats.stamina??100,shoot:stats.shoot??70,pass:stats.pass??70},velocity:new THREE.Vector3(),height,hasBall:false};
  players.push(player);return player;
 }
 const players=[];
@@ -148,13 +153,8 @@ document.querySelectorAll('[data-key]').forEach(b=>{const k=b.dataset.key; b.add
 const msg=document.querySelector('#message');
 function closestTeamMate(){return white.filter(p=>p!==controlled).sort((a,b)=>a.group.position.distanceTo(ball.position)-b.group.position.distanceTo(ball.position))[0];}
 function switchPlayer(){
- const candidates=white.filter(p=>p!==controlled);
- const next=candidates.sort((a,b)=>{
-  const da=a.group.position.distanceTo(ball.position),db=b.group.position.distanceTo(ball.position);
-  const forwardA=a.group.position.z-ball.position.z,forwardB=b.group.position.z-ball.position.z;
-  return da+Math.max(0,forwardA)*.08-db-Math.max(0,forwardB)*.08;
- })[0];
- if(next)controlled=next;
+ const next=white.filter(p=>p!==controlled).sort((a,b)=>a.group.position.distanceToSquared(ball.position)-b.group.position.distanceToSquared(ball.position))[0];
+ if(next){controlled=next;msg.textContent=`التحكم الآن: ${controlled.cardName||'لاعب الفريق'}`;}
 }
 function forwardMate(){
  const options=white.filter(p=>p!==controlled).map(p=>({p,advance:ball.position.z-p.group.position.z,dist:p.group.position.distanceTo(ball.position)})).filter(x=>x.advance>1.2);
@@ -291,13 +291,11 @@ function animate(){
  const nextContext=ballOwner?.team==='white'?'attack':'defense';
  if(nextContext!==controlContext){controlContext=nextContext;updateTouchLabels();}
  // Animate running limbs from each player's actual movement.
- for(const p of players){const motion=Math.min(1,p.velocity.length()/4),stride=Math.sin(elapsed*(sprinting&&p===controlled?17:13)+p.phase)*motion*.72;p.legs[0].rotation.x=stride;p.legs[1].rotation.x=-stride;p.arms[0].rotation.x=-stride*.58;p.arms[1].rotation.x=stride*.58;p.group.position.y=Math.abs(Math.sin(elapsed*13+p.phase))*.045*motion; p.group.rotation.z=THREE.MathUtils.clamp(-p.velocity.length()*.012,-.08,.08);}
+ for(const p of players){const motion=Math.min(1,p.velocity.length()/4),stride=Math.sin(elapsed*(sprinting&&p===controlled?17:13)+p.phase)*motion*.72;p.legs[0].rotation.x=stride;p.legs[1].rotation.x=-stride;p.arms[0].rotation.x=-stride*.58;p.arms[1].rotation.x=stride*.58;p.group.position.y=Math.abs(Math.sin(elapsed*13+p.phase))*.045*motion; p.group.rotation.z=THREE.MathUtils.clamp(-p.velocity.length()*.012,-.08,.08);if(p.selectionMarker)p.selectionMarker.visible=p===controlled;}
  // Goals
  if(Math.abs(ball.position.z)>58 && Math.abs(ball.position.x)<4.9 && ball.position.y<3.25){if(ball.position.z<0)scoreW++;else scoreB++;scoreEl.textContent=`${scoreW} - ${scoreB}`;msg.textContent='GOAL!';resetBall();}
  if(Math.abs(ball.position.x)>39||Math.abs(ball.position.z)>63){resetBall();}
- // Low sideline broadcast camera: players and pitch read from a TV-style side angle.
- const focus=ball.position.clone().lerp(controlled.group.position,.24);const desired=new THREE.Vector3(focus.x+43,9.5,focus.z-3);
- camera.position.lerp(desired,Math.min(1,dt*3.2));camera.lookAt(focus.x,1.05,focus.z);
+ // Fixed sideline broadcast camera: switching players never moves or recentres the camera.
  ball.rotation.x+=ballVel.z*dt*.8;ball.rotation.z-=ballVel.x*dt*.8;
  clockEl.textContent=`${String(Math.floor(elapsed/60)).padStart(2,'0')}:${String(Math.floor(elapsed%60)).padStart(2,'0')}`;
  renderer.render(scene,camera);
