@@ -47,7 +47,7 @@
   <div id="app-shell" class="app-shell hidden">
     <header class="top-header">
       <div class="profile-chip"><span class="level-badge">1</span><span><b>UT CLUB</b><small>المستوى 1</small></span></div>
-      <div class="brand-mark">UT<span>27</span></div>
+      <div class="header-brand-group"><div class="brand-mark">UT<span>27</span></div><button id="quick-menu-toggle" class="quick-menu-toggle header-quick-toggle" aria-label="فتح القائمة السريعة">☰ <span>القائمة السريعة</span></button></div>
       <div class="currency-strip"><span>🪙 <b id="coin-count">5,436</b></span><span>💎 <b>0</b></span><span class="points">FC Points <b>0</b></span></div>
       <button id="settings-shortcut" class="icon-btn" aria-label="الإعدادات">⚙</button>
     </header>
@@ -104,10 +104,10 @@
       <section class="page" data-page="settings"><div class="page-heading"><div><p class="eyebrow">PREFERENCES</p><h1>الإعدادات</h1></div></div><div class="settings-list"><label>جودة الرسومات<select id="graphics-setting"><option value="low">منخفضة</option><option value="medium" selected>متوسطة</option><option value="high">عالية</option></select></label><label>معدل الإطارات<select id="fps-setting"><option>30</option><option selected>60</option><option>90</option><option>120</option></select></label><label>لغة اللعبة<select id="language-setting"><option value="ar">العربية</option><option value="en">English</option></select></label></div></section>
     </main>
 
-    <nav class="bottom-nav"><button class="bottom-btn active" data-tab="home">⌂<small>الرئيسية</small></button><button class="bottom-btn" data-tab="squad">♟<small>النادي</small></button><button class="bottom-btn" data-tab="transfers">⇄<small>الانتقالات</small></button><button class="bottom-btn" data-tab="sbc">♧<small>SBC</small></button><button class="bottom-btn" data-tab="store">🛒<small>المتجر</small></button></nav>
+
   </div>
 
-  <button id="quick-menu-toggle" class="quick-menu-toggle" aria-label="فتح القائمة السريعة">☰ <span>تنقّل سريع</span></button><aside id="quick-menu" class="quick-menu hidden"><div class="quick-head"><b>القائمة السريعة</b><button id="close-quick" class="icon-btn">✕</button></div><div class="quick-items">
+  <aside id="quick-menu" class="quick-menu hidden"><div class="quick-head"><b>القائمة السريعة</b><button id="close-quick" class="icon-btn">✕</button></div><div class="quick-items">
     <button data-tab="home">⌂ <span>الرئيسية</span><small>العودة إلى النادي</small></button><button data-tab="play">⚽ <span>اللعب</span><small>Squad Battles والأنماط</small></button><button data-tab="objectives">◎ <span>الأهداف</span><small>المهام والمكافآت</small></button><button data-tab="squad">♟ <span>التشكيلة</span><small>إدارة اللاعبين</small></button><button data-tab="sbc">✦ <span>SBC</span><small>تحديات بناء التشكيلات</small></button><button data-tab="transfers">⇄ <span>الانتقالات</span><small>سوق اللاعبين</small></button><button data-tab="store">🛒 <span>المتجر</span><small>الباكات</small></button><button data-tab="settings">⚙ <span>الإعدادات</span><small>الجرافيك واللغة</small></button>
   </div><p class="quick-hint">L2 فتح وإغلاق • ↑ ↓ للتنقل • X اختيار • O رجوع</p></aside>
 
