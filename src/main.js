@@ -82,7 +82,7 @@ const ball = new THREE.Mesh(new THREE.SphereGeometry(.36,24,18),mat(0xf7f7f2,.35
 ball.castShadow=true;ball.position.set(0,.38,0);scene.add(ball);
 const ballMark=new THREE.Mesh(new THREE.SphereGeometry(.365,16,12),new THREE.MeshBasicMaterial({color:0x171717,wireframe:true,transparent:true,opacity:.25}));ball.add(ballMark);
 
-function makePlayer(team,x,z,height=1.8,stats={}){
+function makePlayer(team,x,z,height=1.8,stats={},card=null){
  const group=new THREE.Group();scene.add(group);group.position.set(x,0,z);
  const shirt=mat(team==='white'?0xf3f2e9:0x171b20), shorts=mat(team==='white'?0x26313a:0x090b0d), skin=mat(0xb9825c), socks=mat(team==='white'?0xf7f7f2:0x252a30), boots=mat(0xd7d8d4,.45);
  const torso=new THREE.Mesh(new THREE.CapsuleGeometry(.34*height/1.8,.62*height/1.8,7,14),shirt);torso.position.y=height*.59;torso.castShadow=true;group.add(torso);
@@ -90,20 +90,27 @@ function makePlayer(team,x,z,height=1.8,stats={}){
  const shortsMesh=new THREE.Mesh(new THREE.BoxGeometry(.52,.28,.34),shorts);shortsMesh.position.y=height*.29;shortsMesh.castShadow=true;group.add(shortsMesh);
  const head=new THREE.Mesh(new THREE.SphereGeometry(.19*height/1.8,20,16),skin);head.position.y=height*.99;head.castShadow=true;group.add(head);
  const hair=new THREE.Mesh(new THREE.SphereGeometry(.195*height/1.8,16,10,0,Math.PI*2,0,Math.PI*.52),mat(0x201b18));hair.position.y=height*1.025;group.add(hair);
- const legGeo=new THREE.CapsuleGeometry(.105*height/1.8,.43*height/1.8,5,10);
+ const legGeo=new THREE.CapsuleGeometry(.105*height/1.8,.43*height/1.8,5,10),legs=[],arms=[];
  for(const s of [-1,1]){
-  const leg=new THREE.Mesh(legGeo,socks);leg.position.set(s*.16*height/1.8,height*.19,0);leg.castShadow=true;group.add(leg);
+  const leg=new THREE.Mesh(legGeo,socks);leg.position.set(s*.16*height/1.8,height*.19,0);leg.castShadow=true;group.add(leg);legs.push(leg);
   const boot=new THREE.Mesh(new THREE.BoxGeometry(.19,.12,.34),boots);boot.position.set(s*.16*height/1.8,.09,.09);boot.castShadow=true;group.add(boot);
-  const arm=new THREE.Mesh(new THREE.CapsuleGeometry(.09,.43,5,10),shirt);arm.position.set(s*.38,height*.62,0);arm.rotation.z=s*.18;arm.castShadow=true;group.add(arm);
+  const arm=new THREE.Mesh(new THREE.CapsuleGeometry(.09,.43,5,10),shirt);arm.position.set(s*.38,height*.62,0);arm.rotation.z=s*.18;arm.castShadow=true;group.add(arm);arms.push(arm);
   const hand=new THREE.Mesh(new THREE.SphereGeometry(.085,10,8),skin);hand.position.set(s*.4,height*.36,.01);group.add(hand);
  }
- const player={group,team,stats:{speed:stats.speed??7.2,strength:stats.strength??70,agility:stats.agility??70,stamina:stats.stamina??100,shoot:stats.shoot??70,pass:stats.pass??70},velocity:new THREE.Vector3(),height,hasBall:false};
+ group.rotation.y=team==='white'?Math.PI:0;
+ const player={group,team,card,cardName:card?.name||'',rating:card?.rating||70,homePosition:group.position.clone(),legs,arms,phase:Math.random()*Math.PI*2,stats:{speed:stats.speed??7.2,strength:stats.strength??70,agility:stats.agility??70,stamina:stats.stamina??100,shoot:stats.shoot??70,pass:stats.pass??70},velocity:new THREE.Vector3(),height,hasBall:false};
  players.push(player);return player;
 }
 const players=[];
-const white=[makePlayer('white',-7,12,1.78),makePlayer('white',7,12,1.84),makePlayer('white',0,25,1.72)];
-const black=[makePlayer('black',-7,-12,1.9),makePlayer('black',7,-12,1.75),makePlayer('black',0,-25,1.82)];
-let controlled=white[0], scoreW=0,scoreB=0,elapsed=0;
+const formationSlots=['GK','LB','CB1','CB2','RB','CM1','CM2','CM3','LW','ST','RW'];
+const formationPoints=[[0,45],[-25,29],[-9,31],[9,31],[25,29],[0,17],[-14,8],[14,8],[-23,-11],[0,-21],[23,-11]];
+const savedMatchClub=(()=>{try{return JSON.parse(localStorage.getItem('ut27-club')||'[]')}catch{return []}})();
+const savedMatchLineup=(()=>{try{return JSON.parse(localStorage.getItem('ut27-squad')||'{}')}catch{return {}}})();
+function matchCardForSlot(slot){const name=savedMatchLineup[slot];return savedMatchClub.find(p=>p.name===name)||savedMatchClub.find(p=>p.position===slot)||null;}
+function matchStats(card){const s=card?.stats||[72,70,70,70,70,70];return{speed:(s[0]||72)/10,strength:s[5]||70,agility:s[3]||70,stamina:100,shoot:s[1]||70,pass:s[2]||70};}
+const white=formationPoints.map(([x,z],i)=>{const card=matchCardForSlot(formationSlots[i]);return makePlayer('white',x,z,i===0?1.9:1.8,matchStats(card),card);});
+const black=formationPoints.map(([x,z],i)=>makePlayer('black',-x,-z,i===0?1.9:1.8,{speed:6.8+(i%4)*.25,strength:70+(i%5)*3,agility:70+(i%6)*2,stamina:100,shoot:72+(i%5)*3,pass:70+(i%6)*3}));
+let controlled=white[9], scoreW=0,scoreB=0,elapsed=0,ballOwner=null;
 const keys={};
 let joystickInput={x:0,z:0};
 let sprinting=false;
@@ -114,11 +121,11 @@ const msg=document.querySelector('#message');
 function closestTeamMate(){return white.filter(p=>p!==controlled).sort((a,b)=>a.group.position.distanceTo(ball.position)-b.group.position.distanceTo(ball.position))[0];}
 function passBall(){
  if(ball.position.distanceTo(controlled.group.position)>3.2){msg.textContent='اقترب من الكرة أولاً';return;}
- const target=closestTeamMate();const dir=target.group.position.clone().sub(ball.position).normalize();ballVel.copy(dir.multiplyScalar(15));ballVel.y=2.2;msg.textContent='تمرير!';
+ ballOwner=null;const target=closestTeamMate();const dir=target.group.position.clone().sub(ball.position).normalize();ballVel.copy(dir.multiplyScalar(15));ballVel.y=2.2;msg.textContent='تمرير!';
 }
 function throughBall(){
  if(ball.position.distanceTo(controlled.group.position)>4){msg.textContent='اقترب من الكرة أولاً';return;}
- const target=closestTeamMate();const dir=target.group.position.clone().sub(ball.position).normalize();ballVel.copy(dir.multiplyScalar(20));ballVel.y=3.1;msg.textContent='بينية للأمام!';
+ ballOwner=null;const target=closestTeamMate();const dir=target.group.position.clone().sub(ball.position).normalize();ballVel.copy(dir.multiplyScalar(20));ballVel.y=3.1;msg.textContent='بينية للأمام!';
 }
 function tackle(){
  const rival=black.slice().sort((a,b)=>a.group.position.distanceTo(controlled.group.position)-b.group.position.distanceTo(controlled.group.position))[0];
@@ -129,7 +136,7 @@ function tackle(){
 }
 function shootBall(){
  if(ball.position.distanceTo(controlled.group.position)>3.2){msg.textContent='اقترب من الكرة أولاً';return;}
- const dir=new THREE.Vector3(-ball.position.x*.025,0,-Math.sign(controlled.group.position.z||1));
+ ballOwner=null;const dir=new THREE.Vector3(-ball.position.x*.025,0,-Math.sign(controlled.group.position.z||1));
  dir.x+=(Math.random()-.5)*.22;dir.normalize();
  const weakFoot=0.8;const power=controlled.stats.shoot*weakFoot/100;
  ballVel.copy(dir.multiplyScalar(13+power*15));ballVel.y=3+power*3;msg.textContent='تسديدة!';
@@ -170,7 +177,7 @@ function resolveDuel(a,b){
  const delta=a.group.position.clone().sub(b.group.position);delta.y=0;const dist=delta.length();
  if(dist<.85){const powerA=a.stats.strength*.6+a.stats.agility*.25+a.stats.stamina*.15;const powerB=b.stats.strength*.6+b.stats.agility*.25+b.stats.stamina*.15;const winner=powerA>=powerB?a:b,loser=winner===a?b:a;delta.normalize();loser.group.position.addScaledVector(delta,-.18);winner.stats.stamina=Math.max(20,winner.stats.stamina-.025);}
 }
-function resetBall(){ball.position.set(0,.38,0);ballVel.set(0,0,0);white.forEach(p=>p.group.position.z=Math.abs(p.group.position.z));black.forEach(p=>p.group.position.z=-Math.abs(p.group.position.z));}
+function resetBall(){ballOwner=null;ball.position.set(0,.38,0);ballVel.set(0,0,0);white.forEach(p=>p.group.position.copy(p.homePosition));black.forEach(p=>p.group.position.copy(p.homePosition));}
 const clockEl=document.querySelector('#clock'),scoreEl=document.querySelector('#score');
 const clock=new THREE.Clock();
 function animate(){
@@ -211,7 +218,6 @@ const $$ = (selector) => [...document.querySelectorAll(selector)];
 const gameRoot = $('#game-root');
 const appShell = $('#app-shell');
 const languageScreen = $('#language-screen');
-const starterScreen = $('#starter-screen');
 const quickMenu = $('#quick-menu');
 const matchHud = $('#match-hud');
 const matchControls = $('#match-controls');
@@ -229,19 +235,10 @@ function setLanguage(lang) {
   localStorage.setItem('ut27-language', lang);
   document.documentElement.lang = lang;
   document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
-  $('#language-setting').value = lang;
-  if (lang === 'en') {
-    document.querySelector('[data-i18n="chooseLeague"]').textContent = 'Choose your starter league pack';
-    document.querySelector('[data-i18n="chooseLeagueHint"]').textContent = 'Choose one league to receive your starter pack';
-    document.querySelector('[data-i18n="continue"]').textContent = 'Continue';
-  } else {
-    document.querySelector('[data-i18n="chooseLeague"]').textContent = 'اختر باك الدوري التأسيسي';
-    document.querySelector('[data-i18n="chooseLeagueHint"]').textContent = 'اختر دوريًا واحدًا لتحصل على باك البداية';
-    document.querySelector('[data-i18n="continue"]').textContent = 'متابعة';
-  }
+  const languageSetting=$('#language-setting');if(languageSetting)languageSetting.value=lang;
 }
 function showScreen(screen) {
-  [languageScreen, starterScreen, appShell].forEach(el => el.classList.add('hidden'));
+  [languageScreen, appShell].forEach(el => el.classList.add('hidden'));
   screen.classList.remove('hidden');
 }
 function openApp() {
