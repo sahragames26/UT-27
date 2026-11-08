@@ -337,8 +337,8 @@ $('#player-confirm').addEventListener('click',()=>{
   $('#player-actions').classList.remove('hidden');
   $('#player-confirm').classList.add('hidden');
 });
-$('[data-close-player]').forEach(btn=>btn.addEventListener('click',closePlayerModal));
-$('[data-player-action]').forEach(btn=>btn.addEventListener('click',()=>{
+$$('[data-close-player]').forEach(btn=>btn.addEventListener('click',closePlayerModal));
+$$('[data-player-action]').forEach(btn=>btn.addEventListener('click',()=>{
   const action=btn.dataset.playerAction;
   if(action==='back'){closePlayerModal();}
   else if(action==='squad'||action==='sbc'){closePlayerModal();switchTab(action);}
@@ -381,8 +381,8 @@ function chooseQuick() { if (!quickMenu.classList.contains('hidden')) activeQuic
 $('#close-quick').addEventListener('click', closeQuick);
 $('#quick-menu-toggle').addEventListener('click', () => quickMenu.classList.contains('hidden') ? openQuick() : closeQuick());
 $('.quick-items button').forEach(btn => btn.addEventListener('click', () => switchTab(btn.dataset.tab)));
-$('[data-sbc-tab]').forEach(btn => btn.addEventListener('click', () => {
-  $('[data-sbc-tab]').forEach(x => x.classList.toggle('selected', x === btn));
+$$('[data-sbc-tab]').forEach(btn => btn.addEventListener('click', () => {
+  $$('[data-sbc-tab]').forEach(x => x.classList.toggle('selected', x === btn));
   const mode = btn.dataset.sbcTab;
   $('#sbc-challenge-grid .challenge-card').forEach(card => {
     const tag = card.querySelector('.event-tag')?.textContent.trim().toLowerCase() || '';
@@ -394,8 +394,8 @@ $('#open-squad-battles').addEventListener('click', () => {
   difficultyPanel.classList.remove('hidden');
   difficultyPanel.scrollIntoView({behavior:'smooth', block:'nearest'});
 });
-$$('[data-close-panel]').forEach(btn => btn.addEventListener('click', () => difficultyPanel.classList.add('hidden')));
-$$('[data-difficulty]').forEach(btn => btn.addEventListener('click', () => {
+$$$('[data-close-panel]').forEach(btn => btn.addEventListener('click', () => difficultyPanel.classList.add('hidden')));
+$$$('[data-difficulty]').forEach(btn => btn.addEventListener('click', () => {
   $$('.difficulty-grid button').forEach(x => x.classList.remove('chosen'));
   btn.classList.add('chosen');
   selectedDifficulty = btn.dataset.difficulty;
@@ -433,7 +433,7 @@ function showPackModal(name, price) {
   $('#pack-modal').classList.remove('hidden');
 }
 $$('.pack-open').forEach(btn => btn.addEventListener('click', () => showPackModal(btn.dataset.pack, Number(btn.dataset.price))));
-$$('[data-close-modal]').forEach(btn => btn.addEventListener('click', () => $('#pack-modal').classList.add('hidden')));
+$$$('[data-close-modal]').forEach(btn => btn.addEventListener('click', () => $('#pack-modal').classList.add('hidden')));
 $('#search-player').addEventListener('click', () => {
   const q = $('#player-search').value.trim();
   $('#market-results').innerHTML = q
