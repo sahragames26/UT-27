@@ -275,16 +275,43 @@ $('#starter-continue').addEventListener('click', () => {
 
 
 const eventPlayers = [
-  {name:'Ousmane Dembélé', featured:true},{name:'Jude Bellingham', featured:true},
-  {name:'Pedri', featured:true},{name:'Luis Díaz', featured:true},
-  ...Array.from({length:26},(_,i)=>({name:`RTTK Player ${String(i+5).padStart(2,'0')}`}))
+  {name:"Senne Lammens",rating:86,position:"GK",featured:true},
+  {name:"Marcos Llorente",rating:88,position:"RB",featured:true},
+  {name:"Diogo Travassos",rating:85,position:"RB",featured:true},
+  {name:"Alessandro Bastoni",rating:88,position:"CB",featured:true},
+  {name:"Matthias Ginter",rating:86,position:"CB",featured:false},
+  {name:"Fikayo Tomori",rating:86,position:"CB",featured:false},
+  {name:"Cristian Romero",rating:85,position:"CB",featured:false},
+  {name:"Maxim De Cuyper",rating:86,position:"LB",featured:false},
+  {name:"Ryan Gravenberch",rating:88,position:"CDM",featured:false},
+  {name:"Yui Hasegawa",rating:89,position:"CDM",featured:false},
+  {name:"Pedri",rating:91,position:"CM",featured:false},
+  {name:"Zambo Anguissa",rating:86,position:"CM",featured:false},
+  {name:"Gabri Veiga",rating:85,position:"CM",featured:false},
+  {name:"Lamine Camara",rating:85,position:"CM",featured:false},
+  {name:"Aitana Bonmatí",rating:90,position:"CM",featured:false},
+  {name:"Géraldine Reuteler",rating:86,position:"CM",featured:false},
+  {name:"Andreia Jacinto",rating:86,position:"CM",featured:false},
+  {name:"Jude Bellingham",rating:91,position:"CAM",featured:false},
+  {name:"Francisco Conceição",rating:87,position:"CAM",featured:false},
+  {name:"Matías Soulé",rating:85,position:"CAM",featured:false},
+  {name:"Younes Taha",rating:85,position:"CAM",featured:false},
+  {name:"Sakina Karchaoui",rating:88,position:"RM",featured:false},
+  {name:"Timothy Weah",rating:85,position:"RM",featured:false},
+  {name:"Ousmane Dembélé",rating:91,position:"RW",featured:false},
+  {name:"Luis Díaz",rating:90,position:"LM",featured:false},
+  {name:"Alyssa Thompson",rating:87,position:"LM",featured:false},
+  {name:"Jérémy Doku",rating:87,position:"LW",featured:false},
+  {name:"Rafael Leão",rating:87,position:"LW",featured:false},
+  {name:"Tabitha Chawinga",rating:89,position:"LW",featured:false},
+  {name:"Romelu Lukaku",rating:87,position:"ST",featured:false}
 ];
 function buildPlayerCard(player,index,featured=false) {
   const card=document.createElement('button');
   card.type='button'; card.className=`visual-player-card card-tone-${index%6}${featured?' featured':''}`;
-  card.setAttribute('aria-label',featured?'فتح بطاقة لاعب مميز':`فتح بطاقة اللاعب ${index+1}`);
+  card.setAttribute('aria-label',`فتح بطاقة ${player.name}، تقييم ${player.rating}`);
   card.dataset.playerIndex=String(index);
-  card.innerHTML='<span class="card-glow"></span><span class="card-portrait"></span><span class="card-foot-mark">UT</span>';
+  card.innerHTML=`<span class="card-rating">${player.rating}</span><span class="card-position">${player.position}</span><span class="card-portrait"></span><span class="card-player-name">${player.name}</span><span class="card-foot-mark">RTTK</span>`;
   card.addEventListener('click',()=>openPlayerModal(player,index));
   return card;
 }
@@ -298,8 +325,8 @@ function renderEventCards(){
 let selectedPlayer=null;
 function openPlayerModal(player,index){
   selectedPlayer={player,index};
-  $('#player-modal-title').textContent=player.name;
-  $('#player-modal-art').className=`player-modal-art card-tone-${index%6}`;
+  $('#player-modal-title').textContent=player.name+` • ${player.position} • ${player.rating}`;
+  $('#player-modal-art').className=`player-modal-art card-tone-${index%6}`; $('#player-modal-art').innerHTML=`<b>${'${player.rating}'}</b><span>${'${player.position}'}</span><strong>${'${player.name}'}</strong><small>ROAD TO THE KNOCKOUTS</small>`;
   $('#player-actions').classList.add('hidden');
   $('#player-confirm').classList.remove('hidden');
   $('#player-modal').classList.remove('hidden');
