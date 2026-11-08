@@ -276,3 +276,5 @@ body,.app-shell{background-color:transparent}
 .mode-info{padding:13px}
 .bottom-nav{display:none!important}
 @media(max-width:760px){.mode-list{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.mode-card{display:flex;flex-direction:column}.mode-art{width:100%;height:70px;min-height:70px}.mode-info{padding:7px}.mode-info h2{font-size:12px}.mode-info p,.mode-meta{display:none}.mode-info .primary-btn{font-size:10px;padding:7px 4px}.header-quick-toggle span{display:none}.header-brand-group{gap:8px}}
+
+.promo-image-fallback{display:grid}
