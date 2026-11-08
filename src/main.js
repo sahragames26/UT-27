@@ -104,12 +104,13 @@ function makePlayer(team,x,z,height=1.8,stats={},card=null){
 const players=[];
 const formationSlots=['GK','LB','CB1','CB2','RB','CM1','CM2','CM3','LW','ST','RW'];
 const formationPoints=[[0,45],[-25,29],[-9,31],[9,31],[25,29],[0,17],[-14,8],[14,8],[-23,-11],[0,-21],[23,-11]];
-const savedMatchClub=(()=>{try{return JSON.parse(localStorage.getItem('ut27-club')||'[]')}catch{return []}})();
-const savedMatchLineup=(()=>{try{return JSON.parse(localStorage.getItem('ut27-squad')||'{}')}catch{return {}}})();
-function matchCardForSlot(slot){const name=savedMatchLineup[slot];return savedMatchClub.find(p=>p.name===name)||savedMatchClub.find(p=>p.position===slot)||null;}
+let savedMatchClub=(()=>{try{return JSON.parse(localStorage.getItem('ut27-club')||'[]')}catch{return []}})();
+let savedMatchLineup=(()=>{try{return JSON.parse(localStorage.getItem('ut27-squad')||'{}')}catch{return {}}})();
+function matchCardForSlot(slot){const name=savedMatchLineup[slot];return savedMatchClub.find(p=>p.name===name)||null;}
 function matchStats(card){const s=card?.stats||[72,70,70,70,70,70];return{speed:(s[0]||72)/10,strength:s[5]||70,agility:s[3]||70,stamina:100,shoot:s[1]||70,pass:s[2]||70};}
 const white=formationPoints.map(([x,z],i)=>{const card=matchCardForSlot(formationSlots[i]);return makePlayer('white',x,z,i===0?1.9:1.8,matchStats(card),card);});
 const black=formationPoints.map(([x,z],i)=>makePlayer('black',-x,-z,i===0?1.9:1.8,{speed:6.8+(i%4)*.25,strength:70+(i%5)*3,agility:70+(i%6)*2,stamina:100,shoot:72+(i%5)*3,pass:70+(i%6)*3}));
+function refreshMatchRoster(){savedMatchClub=(()=>{try{return JSON.parse(localStorage.getItem('ut27-club')||'[]')}catch{return []}})();savedMatchLineup=(()=>{try{return JSON.parse(localStorage.getItem('ut27-squad')||'{}')}catch{return {}}})();white.forEach((p,i)=>{const card=matchCardForSlot(formationSlots[i]);p.card=card;p.cardName=card?.name||'';p.rating=card?.rating||70;const s=matchStats(card);Object.assign(p.stats,s);});}
 let controlled=white[9], scoreW=0,scoreB=0,elapsed=0,ballOwner=null;
 const keys={};
 let joystickInput={x:0,z:0};
@@ -181,7 +182,7 @@ function resetBall(){ballOwner=null;ball.position.set(0,.38,0);ballVel.set(0,0,0
 const clockEl=document.querySelector('#clock'),scoreEl=document.querySelector('#score');
 const clock=new THREE.Clock();
 function animate(){
- requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.035);elapsed+=dt;
+ requestAnimationFrame(animate);if(root.classList.contains('game-hidden'))return;const dt=Math.min(clock.getDelta(),.035);elapsed+=dt;
  // Human-controlled player
  const input=new THREE.Vector3((keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0)+joystickInput.x,0,(keys.s||keys.arrowdown?1:0)-(keys.w||keys.arrowup?1:0)+joystickInput.z);
  if(input.lengthSq()>0){input.clampLength(0,1);const moveSpeed=controlled.stats.speed*(sprinting?1.48:1);controlled.velocity.lerp(input.clone().multiplyScalar(moveSpeed),Math.min(1,dt*8));controlled.group.position.addScaledVector(controlled.velocity,dt);controlled.group.rotation.y=Math.atan2(input.x,input.z);}
@@ -393,7 +394,7 @@ function openPlayerModal(player,index){
   $('#player-modal-title').textContent=player.name+` • ${player.position} • ${player.rating}`;
   $('#player-modal-art').className=`player-modal-art card-tone-${index%6}`;
   const statMarkup=player.stats?.length===6?player.stats.map((v,i)=>'<span><b>'+v+'</b><small>'+labelsForPlayer(player)[i]+'</small></span>').join(''):'<span class="stats-pending">تفاصيل السمات قيد التحديث</span>';
-  $('#player-modal-art').innerHTML='<b>'+player.rating+'</b><span>'+player.position+'</span><strong>'+player.name+'</strong><small>ROAD TO THE KNOCKOUTS • FC 27</small><div class="modal-face-stats">'+statMarkup+'</div>';
+  $('#player-modal-art').innerHTML=player.image?'<img class="modal-real-card" src="'+player.image+'" alt="'+player.name+' Gold '+player.rating+'"><div class="modal-card-caption">'+(player.club||'')+' · '+(player.league||'Gold')+'</div>':'<b>'+player.rating+'</b><span>'+player.position+'</span><strong>'+player.name+'</strong><small>FC 27 • Gold</small><div class="modal-face-stats">'+statMarkup+'</div>';
   $('#player-actions').classList.add('hidden');
   $('#player-confirm').classList.remove('hidden');
   $('#player-modal').classList.remove('hidden');
@@ -547,6 +548,7 @@ $('#start-match').addEventListener('click', () => {
   matchHud.classList.remove('hidden');
   matchControls.classList.remove('hidden');
   $('#message').textContent = `Squad Battles • ${selectedDifficulty}`;
+  refreshMatchRoster();
 });
 function leaveMatch() {
   gameRoot.classList.add('game-hidden');
