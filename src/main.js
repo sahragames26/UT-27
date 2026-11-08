@@ -335,7 +335,9 @@ let selectedPlayer=null;
 function openPlayerModal(player,index){
   selectedPlayer={player,index};
   $('#player-modal-title').textContent=player.name+` • ${player.position} • ${player.rating}`;
-  $('#player-modal-art').className=`player-modal-art card-tone-${index%6}`; $('#player-modal-art').innerHTML=`<b>${'${player.rating}'}</b><span>${'${player.position}'}</span><strong>${'${player.name}'}</strong><small>ROAD TO THE KNOCKOUTS</small>`;
+  $('#player-modal-art').className=`player-modal-art card-tone-${index%6}`;
+  const statMarkup=player.stats?.length===6?player.stats.map((v,i)=>'<span><b>'+v+'</b><small>'+statLabels[i]+'</small></span>').join(''):'<span class="stats-pending">تفاصيل السمات قيد التحديث</span>';
+  $('#player-modal-art').innerHTML='<b>'+player.rating+'</b><span>'+player.position+'</span><strong>'+player.name+'</strong><small>ROAD TO THE KNOCKOUTS • FC 27</small><div class="modal-face-stats">'+statMarkup+'</div>';
   $('#player-actions').classList.add('hidden');
   $('#player-confirm').classList.remove('hidden');
   $('#player-modal').classList.remove('hidden');
