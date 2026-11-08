@@ -377,3 +377,8 @@ body,.app-shell{background-color:transparent}
 .page[data-page="transfers"] .empty-state{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center}
 @media(max-width:900px){.club-collection-list{grid-template-columns:repeat(6,minmax(0,1fr))}.page[data-page="sbc"] .challenge-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.fc-home-grid{grid-template-columns:minmax(0,1.5fr) minmax(190px,.8fr)}}
 @media(max-width:700px){.fc-home-grid{grid-template-columns:minmax(0,1.35fr) minmax(115px,.8fr);gap:6px}.fc-season-hero,.fc-side-panel{padding:5px!important}.featured-card-grid{gap:4px!important}.featured-card-grid .visual-player-card .card-stat-line{display:none}.featured-card-grid .visual-player-card .card-player-name{font-size:8px}.club-collection-list{grid-template-columns:repeat(5,minmax(0,1fr))}.pack-reveal-list{grid-template-columns:repeat(4,minmax(0,1fr))}.page[data-page="objectives"] .task-list{grid-template-columns:repeat(2,minmax(0,1fr))}.top-header{direction:ltr}.header-left{min-width:0}.header-right{flex:0 0 auto}}
+
+/* Real FC 27 RTTK featured item artwork */
+.featured-card-grid .featured-real-card{display:flex;min-width:0;min-height:0;align-items:center;justify-content:center;overflow:hidden;border:1px solid #dfc678;border-radius:11px;background:radial-gradient(ellipse at center,#173b4c,#071321 78%);box-shadow:0 6px 16px #0009}
+.featured-card-grid .featured-real-card img{display:block;width:100%;height:100%;object-fit:contain;object-position:center;max-width:100%;max-height:100%}
+.featured-card-grid .featured-real-card.image-fallback{color:#f4d982;font-weight:900;text-align:center;padding:8px}
