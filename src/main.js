@@ -110,7 +110,18 @@ function matchCardForSlot(slot){const name=savedMatchLineup[slot];return savedMa
 function matchStats(card){const s=card?.stats||[72,70,70,70,70,70];return{speed:(s[0]||72)/10,strength:s[5]||70,agility:s[3]||70,stamina:100,shoot:s[1]||70,pass:s[2]||70};}
 const white=formationPoints.map(([x,z],i)=>{const card=matchCardForSlot(formationSlots[i]);return makePlayer('white',x,z,i===0?1.9:1.8,matchStats(card),card);});
 const black=formationPoints.map(([x,z],i)=>makePlayer('black',-x,-z,i===0?1.9:1.8,{speed:6.8+(i%4)*.25,strength:70+(i%5)*3,agility:70+(i%6)*2,stamina:100,shoot:72+(i%5)*3,pass:70+(i%6)*3}));
-function refreshMatchRoster(){savedMatchClub=(()=>{try{return JSON.parse(localStorage.getItem('ut27-club')||'[]')}catch{return []}})();savedMatchLineup=(()=>{try{return JSON.parse(localStorage.getItem('ut27-squad')||'{}')}catch{return {}}})();white.forEach((p,i)=>{const card=matchCardForSlot(formationSlots[i]);p.card=card;p.cardName=card?.name||'';p.rating=card?.rating||70;const s=matchStats(card);Object.assign(p.stats,s);});}
+function updatePlayerNameTag(p,card){
+ if(p.nameTag){p.group.remove(p.nameTag);p.nameTag.material.map?.dispose();p.nameTag.material.dispose();p.nameTag=null;}
+ if(!card)return;
+ const canvas=document.createElement('canvas');canvas.width=512;canvas.height=96;
+ const ctx=canvas.getContext('2d');ctx.fillStyle='rgba(5,15,25,.82)';ctx.fillRect(0,0,512,96);
+ ctx.strokeStyle='#e8c96c';ctx.lineWidth=5;ctx.strokeRect(3,3,506,90);
+ ctx.fillStyle='#fff';ctx.font='bold 31px Arial';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(card.name+'  '+card.rating,256,48,490);
+ const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;
+ const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:texture,transparent:true,depthTest:false,depthWrite:false}));
+ sprite.position.set(0,2.85,0);sprite.scale.set(2.8,.52,1);sprite.renderOrder=10;p.group.add(sprite);p.nameTag=sprite;
+}
+function refreshMatchRoster(){savedMatchClub=(()=>{try{return JSON.parse(localStorage.getItem('ut27-club')||'[]')}catch{return []}})();savedMatchLineup=(()=>{try{return JSON.parse(localStorage.getItem('ut27-squad')||'{}')}catch{return {}}})();white.forEach((p,i)=>{const card=matchCardForSlot(formationSlots[i]);p.card=card;p.cardName=card?.name||'';p.rating=card?.rating||70;const s=matchStats(card);Object.assign(p.stats,s);updatePlayerNameTag(p,card);});}
 let controlled=white[9], scoreW=0,scoreB=0,elapsed=0,ballOwner=null;
 const keys={};
 let joystickInput={x:0,z:0};
