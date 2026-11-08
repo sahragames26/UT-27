@@ -324,12 +324,90 @@ function buildPlayerCard(player,index,featured=false) {
   card.addEventListener('pointerleave',()=>{card.style.setProperty('--rx','0deg');card.style.setProperty('--ry','0deg');});
   return card;
 }
+function makeCardTexture(player,index){
+  const canvas=document.createElement('canvas');canvas.width=420;canvas.height=600;
+  const ctx=canvas.getContext('2d');
+  const palettes=[['#0d6b78','#071b35','#e9cf78'],['#165a75','#091b2d','#f1d987'],['#3b5f70','#10192d','#e9c66c'],['#146b65','#0b2134','#f5d37a'],['#5d4b75','#151b35','#ead28a'],['#785b2a','#17263a','#f4d986']];
+  const [top,bottom,accent]=palettes[index%palettes.length];
+  const g=ctx.createLinearGradient(0,0,0,600);g.addColorStop(0,top);g.addColorStop(.58,bottom);g.addColorStop(1,'#06101e');
+  ctx.fillStyle=g;ctx.fillRect(0,0,420,600);
+  ctx.strokeStyle=accent;ctx.lineWidth=8;ctx.strokeRect(12,12,396,576);
+  ctx.strokeStyle=accent+'99';ctx.lineWidth=2;ctx.strokeRect(25,25,370,550);
+  ctx.fillStyle=accent;ctx.font='bold 76px Arial';ctx.fillText(String(player.rating),36,100);
+  ctx.font='bold 34px Arial';ctx.fillText(player.position,42,143);
+  ctx.textAlign='center';
+  const glow=ctx.createRadialGradient(210,275,20,210,275,170);glow.addColorStop(0,'#d5e4e8aa');glow.addColorStop(1,'#5c8e9b00');
+  ctx.fillStyle=glow;ctx.beginPath();ctx.ellipse(210,275,155,160,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#d7b99b';ctx.beginPath();ctx.arc(210,220,62,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#253b50';ctx.beginPath();ctx.ellipse(210,360,104,130,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#f6e6b4';ctx.font='bold 33px Arial';ctx.fillText(player.name,210,474,360);
+  ctx.fillStyle='#c8d8e0';ctx.font='bold 19px Arial';ctx.fillText((player.club||'FC 27')+' • RTTK',210,510,360);
+  ctx.fillStyle=accent;ctx.font='bold 20px Arial';
+  if(player.stats?.length===6){
+    const labels=['PAC','SHO','PAS','DRI','DEF','PHY'];
+    labels.forEach((label,i)=>{const x=70+(i%3)*140,y=548+Math.floor(i/3)*30;ctx.fillText(label+' '+player.stats[i],x,y);});
+  } else ctx.fillText('ROAD TO THE KNOCKOUTS',210,560);
+  ctx.textAlign='start';
+  const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;texture.anisotropy=4;
+  return texture;
+}
+function render3DCardWall(container,players,featured=false){
+  if(!container)return;
+  container.replaceChildren();
+  const scene=new THREE.Scene();scene.background=new THREE.Color(0x081827);
+  const camera=new THREE.PerspectiveCamera(36,1,.1,100);camera.position.set(0,0,featured?7.7:10.8);
+  const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});
+  renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.6));renderer.outputColorSpace=THREE.SRGBColorSpace;
+  container.appendChild(renderer.domElement);
+  scene.add(new THREE.AmbientLight(0xffffff,2.0));
+  const keyLight=new THREE.DirectionalLight(0xffe7b1,2.3);keyLight.position.set(-3,5,7);scene.add(keyLight);
+  const wall=new THREE.Group();scene.add(wall);
+  const cols=featured?2:6,rows=Math.ceil(players.length/cols);
+  const cardW=featured?1.48:.78,cardH=cardW*1.43,gap=featured?.28:.12;
+  const totalW=cols*cardW+(cols-1)*gap,totalH=rows*cardH+(rows-1)*gap;
+  const cardMeshes=[];
+  players.forEach((player,i)=>{
+    const col=i%cols,row=Math.floor(i/cols);
+    const group=new THREE.Group();
+    group.position.set(-totalW/2+cardW/2+col*(cardW+gap),totalH/2-cardH/2-row*(cardH+gap),0);
+    const texture=makeCardTexture(player,i);
+    const front=new THREE.Mesh(new THREE.PlaneGeometry(cardW,cardH),new THREE.MeshStandardMaterial({map:texture,roughness:.38,metalness:.12}));
+    front.position.z=.045;group.add(front);
+    const edge=new THREE.Mesh(new THREE.BoxGeometry(cardW+.035,cardH+.035,.07),new THREE.MeshStandardMaterial({color:0xd4b45f,metalness:.72,roughness:.28}));
+    group.add(edge);group.userData={player,index:eventPlayers.indexOf(player)};
+    wall.add(group);cardMeshes.push(group);
+  });
+  const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();
+  function resize(){
+    const w=Math.max(240,container.clientWidth),h=Math.max(200,container.clientHeight);
+    renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();
+    const dist=featured?7.7:10.8;camera.position.z=dist;
+  }
+  const resizeObserver=new ResizeObserver(resize);resizeObserver.observe(container);resize();
+  let hovered=null;
+  renderer.domElement.addEventListener('pointermove',e=>{
+    const rect=renderer.domElement.getBoundingClientRect();pointer.x=((e.clientX-rect.left)/rect.width)*2-1;pointer.y=-((e.clientY-rect.top)/rect.height)*2+1;
+    raycaster.setFromCamera(pointer,camera);const hits=raycaster.intersectObjects(cardMeshes.flatMap(g=>g.children),false);
+    const next=hits[0]?.object.parent||null;
+    if(hovered&&hovered!==next){hovered.rotation.set(0,0,0);hovered.scale.setScalar(1);}
+    hovered=next;
+    if(hovered){const localX=pointer.x;hovered.rotation.y=localX*.12;hovered.rotation.x=-pointer.y*.08;hovered.scale.setScalar(1.035);renderer.domElement.style.cursor='pointer';}
+    else renderer.domElement.style.cursor='default';
+  });
+  renderer.domElement.addEventListener('pointerleave',()=>{if(hovered){hovered.rotation.set(0,0,0);hovered.scale.setScalar(1);}hovered=null;});
+  renderer.domElement.addEventListener('click',()=>{
+    raycaster.setFromCamera(pointer,camera);const hits=raycaster.intersectObjects(cardMeshes.flatMap(g=>g.children),false);
+    const group=hits[0]?.object.parent;if(group?.userData.player)openPlayerModal(group.userData.player,group.userData.index);
+  });
+  let frame=0;
+  function animate(){if(!container.isConnected){resizeObserver.disconnect();renderer.dispose();return;}frame++;wall.rotation.y=Math.sin(frame*.004)*.012;renderer.render(scene,camera);requestAnimationFrame(animate);}
+  animate();
+}
 function renderEventCards(){
   const grid=$('#event-card-grid'),featured=$('#featured-card-grid');
   if(!grid||!featured)return;
-  grid.replaceChildren();featured.replaceChildren();
-  eventPlayers.forEach((p,i)=>grid.appendChild(buildPlayerCard(p,i)));
-  [0,1,2,3].forEach(i=>featured.appendChild(buildPlayerCard(eventPlayers[i],i,true)));
+  render3DCardWall(grid,eventPlayers,false);
+  render3DCardWall(featured,[eventPlayers[0],eventPlayers[1],eventPlayers[2],eventPlayers[3]],true);
 }
 let selectedPlayer=null;
 function openPlayerModal(player,index){
