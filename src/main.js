@@ -273,6 +273,59 @@ $('#starter-continue').addEventListener('click', () => {
   showPackModal('Starter Pack', 0);
 });
 
+
+const eventPlayers = [
+  {name:'Ousmane Dembélé', featured:true},{name:'Jude Bellingham', featured:true},
+  {name:'Pedri', featured:true},{name:'Luis Díaz', featured:true},
+  ...Array.from({length:26},(_,i)=>({name:`RTTK Player ${String(i+5).padStart(2,'0')}`}))
+];
+function buildPlayerCard(player,index,featured=false) {
+  const card=document.createElement('button');
+  card.type='button'; card.className=`visual-player-card card-tone-${index%6}${featured?' featured':''}`;
+  card.setAttribute('aria-label',featured?'فتح بطاقة لاعب مميز':`فتح بطاقة اللاعب ${index+1}`);
+  card.dataset.playerIndex=String(index);
+  card.innerHTML='<span class="card-glow"></span><span class="card-portrait"></span><span class="card-foot-mark">UT</span>';
+  card.addEventListener('click',()=>openPlayerModal(player,index));
+  return card;
+}
+function renderEventCards(){
+  const grid=$('#event-card-grid'),featured=$('#featured-card-grid');
+  if(!grid||!featured)return;
+  grid.replaceChildren();featured.replaceChildren();
+  eventPlayers.forEach((p,i)=>grid.appendChild(buildPlayerCard(p,i)));
+  [0,1,2,3].forEach(i=>featured.appendChild(buildPlayerCard(eventPlayers[i],i,true)));
+}
+let selectedPlayer=null;
+function openPlayerModal(player,index){
+  selectedPlayer={player,index};
+  $('#player-modal-title').textContent=player.name;
+  $('#player-modal-art').className=`player-modal-art card-tone-${index%6}`;
+  $('#player-actions').classList.add('hidden');
+  $('#player-confirm').classList.remove('hidden');
+  $('#player-modal').classList.remove('hidden');
+}
+function closePlayerModal(){$('#player-modal').classList.add('hidden');selectedPlayer=null;}
+renderEventCards();
+$('#player-confirm').addEventListener('click',()=>{
+  $('#player-actions').classList.remove('hidden');
+  $('#player-confirm').classList.add('hidden');
+});
+$('[data-close-player]').forEach(btn=>btn.addEventListener('click',closePlayerModal));
+$('[data-player-action]').forEach(btn=>btn.addEventListener('click',()=>{
+  const action=btn.dataset.playerAction;
+  if(action==='back'){closePlayerModal();}
+  else if(action==='squad'||action==='sbc'){closePlayerModal();switchTab(action);}
+  else {
+    $('#player-modal-title').textContent='الأنماط الأساسية';
+    $('#player-actions').innerHTML='<button type="button">أساسي</button><button type="button">هجومي</button><button type="button">دفاعي</button><button type="button" data-player-back>رجوع</button>';
+    $('#player-actions').querySelector('[data-player-back]').addEventListener('click',()=>{
+      $('#player-modal-title').textContent=selectedPlayer?.player.name||'لاعب الحدث';
+      $('#player-actions').innerHTML='<button data-player-action="styles">الأنماط الأساسية</button><button data-player-action="squad">إضافة للتشكيلة</button><button data-player-action="sbc">استخدام في SBC</button><button data-player-action="back">رجوع</button>';
+      $('#player-actions [data-player-action]').forEach(b=>b.addEventListener('click',()=>{const a=b.dataset.playerAction;if(a==='back')closePlayerModal();else if(a==='squad'||a==='sbc'){closePlayerModal();switchTab(a);}else $('#player-modal-title').textContent='الأنماط الأساسية';}));
+    });
+  }
+}));
+
 function switchTab(tab) {
   currentTab = tab;
   $$('.page').forEach(page => page.classList.toggle('active', page.dataset.page === tab));
@@ -373,7 +426,11 @@ function pollGamepad() {
     if (just(6)) quickMenu.classList.contains('hidden') ? openQuick() : closeQuick(); // L2
     if (just(12)) moveQuick(-1);
     if (just(13)) moveQuick(1);
-    if (just(0)) chooseQuick(); // X
+    if (just(0)) {
+      if (!$('#player-modal').classList.contains('hidden')) {
+        if ($('#player-actions').classList.contains('hidden')) $('#player-confirm').click();
+      } else chooseQuick();
+    } // X
     if (just(1)) {
       if (!quickMenu.classList.contains('hidden')) closeQuick();
       else if (!difficultyPanel.classList.contains('hidden')) difficultyPanel.classList.add('hidden');
@@ -387,6 +444,11 @@ requestAnimationFrame(pollGamepad);
 // Keyboard fallback mirrors the controller for desktop testing.
 addEventListener('keydown', e => {
   if (e.repeat) return;
+  if (!$('#player-modal').classList.contains('hidden')) {
+    if (e.key.toLowerCase()==='x' && $('#player-actions').classList.contains('hidden')) $('#player-confirm').click();
+    if (e.key==='Escape') closePlayerModal();
+    return;
+  }
   if (e.key === 'Escape' || e.key.toLowerCase() === 'l') {
     if (quickMenu.classList.contains('hidden')) openQuick(); else closeQuick();
   }
