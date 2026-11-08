@@ -79,14 +79,27 @@ const white=[makePlayer('white',-7,12,1.78),makePlayer('white',7,12,1.84),makePl
 const black=[makePlayer('black',-7,-12,1.9),makePlayer('black',7,-12,1.75),makePlayer('black',0,-25,1.82)];
 let controlled=white[0], scoreW=0,scoreB=0,elapsed=0;
 const keys={};
+let joystickInput={x:0,z:0};
+let sprinting=false;
 addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;if(e.key==='Tab'){e.preventDefault();const i=white.indexOf(controlled);controlled=white[(i+1)%white.length];}});
-addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
+addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;if(e.key===' ')sprinting=false;});
 document.querySelectorAll('[data-key]').forEach(b=>{const k=b.dataset.key; b.addEventListener('pointerdown',e=>{e.preventDefault();keys[k]=true});['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev,()=>keys[k]=false));});
 const msg=document.querySelector('#message');
 function closestTeamMate(){return white.filter(p=>p!==controlled).sort((a,b)=>a.group.position.distanceTo(ball.position)-b.group.position.distanceTo(ball.position))[0];}
 function passBall(){
  if(ball.position.distanceTo(controlled.group.position)>3.2){msg.textContent='اقترب من الكرة أولاً';return;}
  const target=closestTeamMate();const dir=target.group.position.clone().sub(ball.position).normalize();ballVel.copy(dir.multiplyScalar(15));ballVel.y=2.2;msg.textContent='تمرير!';
+}
+function throughBall(){
+ if(ball.position.distanceTo(controlled.group.position)>4){msg.textContent='اقترب من الكرة أولاً';return;}
+ const target=closestTeamMate();const dir=target.group.position.clone().sub(ball.position).normalize();ballVel.copy(dir.multiplyScalar(20));ballVel.y=3.1;msg.textContent='بينية للأمام!';
+}
+function tackle(){
+ const rival=black.slice().sort((a,b)=>a.group.position.distanceTo(controlled.group.position)-b.group.position.distanceTo(controlled.group.position))[0];
+ if(rival && rival.group.position.distanceTo(controlled.group.position)<2.25){
+   const toward=controlled.group.position.clone().sub(rival.group.position).normalize();rival.group.position.addScaledVector(toward,1.1);
+   ball.position.copy(controlled.group.position).add(new THREE.Vector3(0,.38,-.75));ballVel.set(0,0,0);msg.textContent='افتكاك ناجح للكرة!';
+ } else msg.textContent='اقترب من المنافس لتنفيذ الالتحام';
 }
 function shootBall(){
  if(ball.position.distanceTo(controlled.group.position)>3.2){msg.textContent='اقترب من الكرة أولاً';return;}
@@ -95,9 +108,26 @@ function shootBall(){
  const weakFoot=0.8;const power=controlled.stats.shoot*weakFoot/100;
  ballVel.copy(dir.multiplyScalar(13+power*15));ballVel.y=3+power*3;msg.textContent='تسديدة!';
 }
-addEventListener('keydown',e=>{if(e.repeat)return;if(e.key.toLowerCase()==='j')passBall();if(e.key.toLowerCase()==='k')shootBall();});
-document.querySelector('[data-action="pass"]').addEventListener('pointerdown',passBall);
-document.querySelector('[data-action="shoot"]').addEventListener('pointerdown',shootBall);
+addEventListener('keydown',e=>{if(e.repeat)return;if(e.key.toLowerCase()==='j')passBall();if(e.key.toLowerCase()==='k')shootBall();if(e.key.toLowerCase()==='i')throughBall();if(e.key.toLowerCase()===' ')sprinting=true;if(e.key.toLowerCase()==='e')tackle();});
+document.querySelector('[data-action="pass"]').addEventListener('pointerdown',e=>{e.preventDefault();passBall();});
+document.querySelector('[data-action="shoot"]').addEventListener('pointerdown',e=>{e.preventDefault();shootBall();});
+document.querySelector('[data-action="through"]').addEventListener('pointerdown',e=>{e.preventDefault();throughBall();});
+document.querySelector('[data-action="tackle"]').addEventListener('pointerdown',e=>{e.preventDefault();tackle();});
+const sprintButton=document.querySelector('[data-action="sprint"]');
+sprintButton.addEventListener('pointerdown',e=>{e.preventDefault();sprinting=true;sprintButton.classList.add('pressed');});
+['pointerup','pointerleave','pointercancel'].forEach(ev=>sprintButton.addEventListener(ev,()=>{sprinting=false;sprintButton.classList.remove('pressed');}));
+const stick=document.querySelector('#virtual-stick'),knob=document.querySelector('#stick-knob');
+let stickPointer=null;
+function updateStick(e){
+ const rect=stick.getBoundingClientRect(),cx=rect.left+rect.width/2,cy=rect.top+rect.height/2;
+ let dx=e.clientX-cx,dy=e.clientY-cy;const max=rect.width*.32,len=Math.hypot(dx,dy);
+ if(len>max){dx=dx/len*max;dy=dy/len*max;}
+ joystickInput={x:dx/max,z:dy/max};knob.style.transform=`translate(${dx}px,${dy}px)`;
+}
+stick.addEventListener('pointerdown',e=>{e.preventDefault();stickPointer=e.pointerId;stick.setPointerCapture(stickPointer);updateStick(e);});
+stick.addEventListener('pointermove',e=>{if(e.pointerId===stickPointer)updateStick(e);});
+function releaseStick(e){if(e.pointerId!==stickPointer)return;stickPointer=null;joystickInput={x:0,z:0};knob.style.transform='translate(0,0)';}
+['pointerup','pointercancel','lostpointercapture'].forEach(ev=>stick.addEventListener(ev,releaseStick));
 let ballVel=new THREE.Vector3();
 function moveToward(p,target,dt,maxSpeed){
  const d=target.clone().sub(p.group.position);d.y=0;
@@ -114,8 +144,8 @@ const clock=new THREE.Clock();
 function animate(){
  requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.035);elapsed+=dt;
  // Human-controlled player
- const input=new THREE.Vector3((keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0),0,(keys.s||keys.arrowdown?1:0)-(keys.w||keys.arrowup?1:0));
- if(input.lengthSq()>0){input.normalize();controlled.velocity.lerp(input.multiplyScalar(controlled.stats.speed),Math.min(1,dt*8));controlled.group.position.addScaledVector(controlled.velocity,dt);controlled.group.rotation.y=Math.atan2(input.x,input.z);}
+ const input=new THREE.Vector3((keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0)+joystickInput.x,0,(keys.s||keys.arrowdown?1:0)-(keys.w||keys.arrowup?1:0)+joystickInput.z);
+ if(input.lengthSq()>0){input.clampLength(0,1);const moveSpeed=controlled.stats.speed*(sprinting?1.48:1);controlled.velocity.lerp(input.clone().multiplyScalar(moveSpeed),Math.min(1,dt*8));controlled.group.position.addScaledVector(controlled.velocity,dt);controlled.group.rotation.y=Math.atan2(input.x,input.z);}
  else controlled.velocity.multiplyScalar(.82);
  // Teammates seek useful positions; opponents press the ball
  for(const p of white){if(p!==controlled){const target=ball.position.clone().add(new THREE.Vector3(p.group.position.x*.18,0,Math.max(4,p.group.position.z*.18)));moveToward(p,target,dt,p.stats.speed*.65);}}
