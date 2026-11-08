@@ -508,7 +508,7 @@ function openSbcChallenge(card){
  const alreadySelected=new Set(Object.values(squadAssignments));clubPlayers.forEach((p,index)=>{if(alreadySelected.has(p.name))return;const b=document.createElement('button');b.type='button';b.className='sbc-player-option';b.innerHTML='<b>'+p.rating+'</b><small>'+p.position+'</small><strong>'+p.name+'</strong>';b.addEventListener('click',()=>{if(selectedSbcPlayers.includes(index)){selectedSbcPlayers=selectedSbcPlayers.filter(x=>x!==index);b.classList.remove('selected');}else if(selectedSbcPlayers.length<3){selectedSbcPlayers.push(index);b.classList.add('selected');}$('#sbc-select-count').textContent='اختر 3 لاعبين من النادي ('+selectedSbcPlayers.length+'/3)';$('#sbc-submit').disabled=selectedSbcPlayers.length!==3;});pool.appendChild(b);});
  $('#sbc-select-count').textContent='اختر 3 لاعبين من النادي (0/3)';$('#sbc-submit').disabled=true;$('#sbc-submit-panel').classList.remove('hidden');
 }
-$('#sbc-challenge-grid .challenge-card').forEach(card=>{card.tabIndex=0;card.addEventListener('click',()=>openSbcChallenge(card));card.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openSbcChallenge(card);}});});
+$$('#sbc-challenge-grid .challenge-card').forEach(card=>{card.tabIndex=0;card.addEventListener('click',()=>openSbcChallenge(card));card.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openSbcChallenge(card);}});});
 $('#sbc-cancel').addEventListener('click',()=>$('#sbc-submit-panel').classList.add('hidden'));
 $('#sbc-submit').addEventListener('click',()=>{
  if(selectedSbcPlayers.length!==3)return;
@@ -521,7 +521,7 @@ $('#sbc-submit').addEventListener('click',()=>{
  $('#sbc-result').textContent='تم تسليم 3 لاعبين وإضافة '+reward.name+' ('+reward.rating+') إلى النادي.';
  $('#sbc-player-pool').replaceChildren();$('#sbc-select-count').textContent='اكتمل التحدي';$('#sbc-submit').disabled=true;selectedSbcPlayers=[];
 });
-$('[data-sbc-tab]').forEach(btn => btn.addEventListener('click', () => {
+$$('[data-sbc-tab]').forEach(btn => btn.addEventListener('click', () => {
   $$('[data-sbc-tab]').forEach(x => x.classList.toggle('selected', x === btn));
   const mode = btn.dataset.sbcTab;
   $$( '#sbc-challenge-grid .challenge-card' ).forEach(card => {
@@ -585,10 +585,10 @@ function showPackModal(name,price,league){
  $('#pack-modal').classList.remove('hidden');
 }
 let selectedPackLeague='';
-$('[data-select-league]').forEach(btn=>btn.addEventListener('click',()=>{
+$$('[data-select-league]').forEach(btn=>btn.addEventListener('click',()=>{
  selectedPackLeague=btn.dataset.selectLeague;
  const pack=leaguePackInfo[selectedPackLeague];if(!pack)return;
- $('.league-pack-card').forEach(card=>card.classList.toggle('selected',card.dataset.league===selectedPackLeague));
+ $$('.league-pack-card').forEach(card=>card.classList.toggle('selected',card.dataset.league===selectedPackLeague));
  $('#selected-league-pack').classList.remove('hidden');
  $('#selected-pack-name').textContent=pack.title;
  $('#selected-pack-description').textContent='5 لاعبين Gold عشوائيين من '+selectedPackLeague+'، كل كارت بصورته وتقييمه وإحصائياته';
