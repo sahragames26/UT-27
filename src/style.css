@@ -428,3 +428,11 @@ body,.app-shell{background-color:transparent}
 .player-dot.selected span b{color:#ffe28a}
 @media(max-width:1050px){.league-pack-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.club-collection-list{grid-template-columns:repeat(6,minmax(0,1fr))}}
 @media(max-width:700px){.league-pack-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.pack-art.league-pack{height:145px!important;min-height:145px!important}.pack-reveal-list{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}.pack-player-item img{max-height:190px}.club-collection-list{grid-template-columns:repeat(4,minmax(0,1fr))}.club-card img{max-height:105px}.bench-player img{width:44px;height:60px}.squad-pick-card img{width:52px;height:70px}}
+
+.selected-league-pack{display:grid;grid-template-columns:150px minmax(0,1fr);gap:16px;align-items:center;padding:12px;margin:0 0 12px;border:1px solid #d6b85d55;border-radius:12px;background:linear-gradient(110deg,#102538,#07131f)}
+.selected-pack-copy h2{margin:2px 0 5px;font-size:19px}.selected-pack-copy p:not(.eyebrow){margin:0 0 8px;font-size:12px;color:#c7d4dc}
+.selected-pack-meta{display:flex;gap:12px;flex-wrap:wrap;margin:0 0 10px;color:#e8d18e;font-size:10px}
+.selected-pack-meta span:before{content:"✓ ";color:#9bd5b4}
+.selected-league-pack .pack-art{height:155px!important;min-height:155px!important;margin:0 auto}
+.league-pack-card.selected{border-color:#f0d16f;box-shadow:0 0 0 2px #e6c76c55,0 10px 28px #0007}
+@media(max-width:700px){.selected-league-pack{grid-template-columns:95px minmax(0,1fr);gap:10px;padding:8px}.selected-league-pack .pack-art{height:120px!important;min-height:120px!important}.selected-pack-copy h2{font-size:14px}.selected-pack-copy p:not(.eyebrow){font-size:10px}.selected-pack-meta{gap:6px;font-size:8px}}
