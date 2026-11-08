@@ -106,7 +106,7 @@ const formationSlots=['GK','LB','CB1','CB2','RB','CM1','CM2','CM3','LW','ST','RW
 const formationPoints=[[0,45],[-25,29],[-9,31],[9,31],[25,29],[0,17],[-14,8],[14,8],[-23,-11],[0,-21],[23,-11]];
 let savedMatchClub=(()=>{try{return JSON.parse(localStorage.getItem('ut27-club')||'[]')}catch{return []}})();
 let savedMatchLineup=(()=>{try{return JSON.parse(localStorage.getItem('ut27-squad')||'{}')}catch{return {}}})();
-function matchCardForSlot(slot){const name=savedMatchLineup[slot];return savedMatchClub.find(p=>p.name===name)||null;}
+function matchCardForSlot(slot){const name=savedMatchLineup[slot];return savedMatchClub.find(p=>p.id===name||p.name===name)||null;}
 function matchStats(card){const s=card?.stats||[72,70,70,70,70,70];return{speed:(s[0]||72)/10,strength:s[5]||70,agility:s[3]||70,stamina:100,shoot:s[1]||70,pass:s[2]||70};}
 const white=formationPoints.map(([x,z],i)=>{const card=matchCardForSlot(formationSlots[i]);return makePlayer('white',x,z,i===0?1.9:1.8,matchStats(card),card);});
 const black=formationPoints.map(([x,z],i)=>makePlayer('black',-x,-z,i===0?1.9:1.8,{speed:6.8+(i%4)*.25,strength:70+(i%5)*3,agility:70+(i%6)*2,stamina:100,shoot:72+(i%5)*3,pass:70+(i%6)*3}));
@@ -410,18 +410,18 @@ const benchPanel = $('#bench-panel');
 function renderBench(){
   const list=$('#bench-list'); if(!list)return;
   const used=new Set(Object.values(squadAssignments));
-  const bench=clubPlayers.filter(p=>!used.has(p.name));
+  const bench=clubPlayers.filter(p=>!used.has(p.id)&&!used.has(p.name));
   list.replaceChildren();
   bench.slice(0,12).forEach(p=>{
     const b=document.createElement('button');b.className='bench-player';b.type='button';
     b.innerHTML=(p.image?'<img src="'+p.image+'" alt="" loading="lazy">':'')+'<span><b>'+p.rating+'</b><br>'+p.position+'<br>'+p.name.split(' ').slice(-1)[0]+'</span>'; 
-    b.addEventListener('click',()=>{const preferred=activeSquadSlot;const choices=p.position==='GK'?['GK']:['LB','CB1','CB2','RB','CM1','CM2','CM3','LW','ST','RW'];const slot=preferred&&!squadAssignments[preferred]?preferred:choices.find(s=>!squadAssignments[s]&&(s===p.position||(s.startsWith('CB')&&p.position==='CB')||(s.startsWith('CM')&&['CM','CDM','CAM'].includes(p.position))||(s==='LW'&&['LW','LM'].includes(p.position))||(s==='RW'&&['RW','RM'].includes(p.position))||(s==='ST'&&['ST','CF'].includes(p.position))||(s==='LB'&&['LB','LWB'].includes(p.position))||(s==='RB'&&['RB','RWB'].includes(p.position))));if(slot){squadAssignments[slot]=p.name;localStorage.setItem('ut27-squad',JSON.stringify(squadAssignments));activeSquadSlot='';renderSquad();}else openSquadPicker(p.position);});
+    b.addEventListener('click',()=>{const preferred=activeSquadSlot;const choices=p.position==='GK'?['GK']:['LB','CB1','CB2','RB','CM1','CM2','CM3','LW','ST','RW'];const slot=preferred&&!squadAssignments[preferred]?preferred:choices.find(s=>!squadAssignments[s]&&(s===p.position||(s.startsWith('CB')&&p.position==='CB')||(s.startsWith('CM')&&['CM','CDM','CAM'].includes(p.position))||(s==='LW'&&['LW','LM'].includes(p.position))||(s==='RW'&&['RW','RM'].includes(p.position))||(s==='ST'&&['ST','CF'].includes(p.position))||(s==='LB'&&['LB','LWB'].includes(p.position))||(s==='RB'&&['RB','RWB'].includes(p.position))));if(slot){squadAssignments[slot]=p.id||p.name;localStorage.setItem('ut27-squad',JSON.stringify(squadAssignments));activeSquadSlot='';renderSquad();}else openSquadPicker(p.position);});
     list.appendChild(b);
   });
 }
 function renderSquad(){
   $$( '#squad-pitch [data-slot]' ).forEach(btn=>{
-    const player=clubPlayers.find(p=>p.name===squadAssignments[btn.dataset.slot]);
+    const player=clubPlayers.find(p=>p.id===squadAssignments[btn.dataset.slot]||p.name===squadAssignments[btn.dataset.slot]);
     btn.classList.toggle('selected',!!player);
     btn.innerHTML=player?(player.image?'<img class="squad-player-photo" src="'+player.image+'" alt="'+player.name+'"><span><b>'+player.rating+'</b><small>'+player.name.split(' ').slice(-1)[0]+'</small></span>':'<b>'+player.rating+'</b><small>'+player.name.split(' ').slice(-1)[0]+'</small>'):btn.dataset.slot;
   });
@@ -435,7 +435,7 @@ function openSquadPicker(slot){
   activeSquadSlot=slot;
   $('#squad-picker-title').textContent='اختيار لاعب لمركز '+slot;
   const list=$('#squad-picker-list');list.replaceChildren();
-  clubPlayers.filter(p=>(!Object.values(squadAssignments).includes(p.name)||squadAssignments[slot]===p.name) && (p.position===slot || (slot.startsWith('CB')&&p.position==='CB') || (slot.startsWith('CM')&&['CM','CDM','CAM'].includes(p.position)) || (slot==='LW'&&['LW','LM'].includes(p.position)) || (slot==='RW'&&['RW','RM'].includes(p.position)) || (slot==='LB'&&['LB','LWB'].includes(p.position)) || (slot==='RB'&&['RB','RWB'].includes(p.position)) || (slot==='ST'&&['ST','CF'].includes(p.position)) || (slot==='GK'&&p.position==='GK'))).forEach(p=>{
+  clubPlayers.filter(p=>(!Object.values(squadAssignments).includes(p.id)&&!Object.values(squadAssignments).includes(p.name)||squadAssignments[slot]===p.id||squadAssignments[slot]===p.name) && (p.position===slot || (slot.startsWith('CB')&&p.position==='CB') || (slot.startsWith('CM')&&['CM','CDM','CAM'].includes(p.position)) || (slot==='LW'&&['LW','LM'].includes(p.position)) || (slot==='RW'&&['RW','RM'].includes(p.position)) || (slot==='LB'&&['LB','LWB'].includes(p.position)) || (slot==='RB'&&['RB','RWB'].includes(p.position)) || (slot==='ST'&&['ST','CF'].includes(p.position)) || (slot==='GK'&&p.position==='GK'))).forEach(p=>{
     const b=document.createElement('button');b.type='button';b.className='squad-pick-card';b.innerHTML=(p.image?'<img src="'+p.image+'" alt="" loading="lazy">':'')+'<span><b>'+p.rating+' OVR</b><br>'+p.name+'<br>'+p.position+'</span>';
     b.addEventListener('click',()=>{squadAssignments[slot]=p.name;localStorage.setItem('ut27-squad',JSON.stringify(squadAssignments));activeSquadSlot='';$('#squad-picker').classList.add('hidden');renderSquad();});list.appendChild(b);
   });
@@ -505,7 +505,7 @@ function openSbcChallenge(card){
  $('#sbc-result').textContent='';
  const pool=$('#sbc-player-pool');pool.replaceChildren();
  if(clubPlayers.length<3){$('#sbc-result').textContent='تحتاج إلى 3 لاعبين على الأقل في النادي لإكمال التحدي.';$('#sbc-submit').disabled=true;$('#sbc-submit-panel').classList.remove('hidden');return;}
- const alreadySelected=new Set(Object.values(squadAssignments));clubPlayers.forEach((p,index)=>{if(alreadySelected.has(p.name))return;const b=document.createElement('button');b.type='button';b.className='sbc-player-option';b.innerHTML='<b>'+p.rating+'</b><small>'+p.position+'</small><strong>'+p.name+'</strong>';b.addEventListener('click',()=>{if(selectedSbcPlayers.includes(index)){selectedSbcPlayers=selectedSbcPlayers.filter(x=>x!==index);b.classList.remove('selected');}else if(selectedSbcPlayers.length<3){selectedSbcPlayers.push(index);b.classList.add('selected');}$('#sbc-select-count').textContent='اختر 3 لاعبين من النادي ('+selectedSbcPlayers.length+'/3)';$('#sbc-submit').disabled=selectedSbcPlayers.length!==3;});pool.appendChild(b);});
+ const alreadySelected=new Set(Object.values(squadAssignments));clubPlayers.forEach((p,index)=>{if(alreadySelected.has(p.id)||alreadySelected.has(p.name))return;const b=document.createElement('button');b.type='button';b.className='sbc-player-option';b.innerHTML='<b>'+p.rating+'</b><small>'+p.position+'</small><strong>'+p.name+'</strong>';b.addEventListener('click',()=>{if(selectedSbcPlayers.includes(index)){selectedSbcPlayers=selectedSbcPlayers.filter(x=>x!==index);b.classList.remove('selected');}else if(selectedSbcPlayers.length<3){selectedSbcPlayers.push(index);b.classList.add('selected');}$('#sbc-select-count').textContent='اختر 3 لاعبين من النادي ('+selectedSbcPlayers.length+'/3)';$('#sbc-submit').disabled=selectedSbcPlayers.length!==3;});pool.appendChild(b);});
  $('#sbc-select-count').textContent='اختر 3 لاعبين من النادي (0/3)';$('#sbc-submit').disabled=true;$('#sbc-submit-panel').classList.remove('hidden');
 }
 $$('#sbc-challenge-grid .challenge-card').forEach(card=>{card.tabIndex=0;card.addEventListener('click',()=>openSbcChallenge(card));card.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openSbcChallenge(card);}});});
@@ -514,7 +514,7 @@ $('#sbc-submit').addEventListener('click',()=>{
  if(selectedSbcPlayers.length!==3)return;
  const consumed=selectedSbcPlayers.map(i=>clubPlayers[i]);
  const indexes=[...selectedSbcPlayers].sort((a,b)=>b-a);indexes.forEach(i=>clubPlayers.splice(i,1));
- consumed.forEach(p=>Object.keys(squadAssignments).forEach(slot=>{if(squadAssignments[slot]===p.name)delete squadAssignments[slot];}));localStorage.setItem('ut27-squad',JSON.stringify(squadAssignments));
+ consumed.forEach(p=>Object.keys(squadAssignments).forEach(slot=>{if(squadAssignments[slot]===p.id||squadAssignments[slot]===p.name)delete squadAssignments[slot];}));localStorage.setItem('ut27-squad',JSON.stringify(squadAssignments));
  const rewardSource=eventPlayers[Math.floor(Math.random()*eventPlayers.length)];
  const reward={...rewardSource,id:'sbc-reward-'+Date.now(),tier:'SBC Reward'};
  clubPlayers.push(reward);saveClub();renderSquad();
