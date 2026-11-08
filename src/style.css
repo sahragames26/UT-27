@@ -252,3 +252,9 @@ html,body{height:100%;overflow:hidden}
 .mode-art{width:100%;min-width:0;height:115px;font-size:52px}
 .mode-info{padding:13px}.mode-info h2{font-size:18px}.mode-info p{font-size:11px;line-height:1.5}
 @media(max-width:760px){.mode-list{grid-template-columns:1fr}.mode-card{flex-direction:row}.mode-art{width:27%;height:auto;min-height:150px}.mode-info{padding:12px}}
+
+/* Three.js canvas hosts: each collage is a single interactive 3D surface */
+.event-card-grid{display:block;height:clamp(330px,48vh,500px);min-height:330px;padding:3px;border-radius:12px;background:radial-gradient(ellipse at center,#123c51,#071726 72%);overflow:hidden}
+.event-card-grid canvas,.featured-card-grid canvas{display:block;width:100%;height:100%;touch-action:pan-y}
+.featured-card-grid{display:block;height:clamp(330px,48vh,500px);min-height:330px;border-radius:12px;background:radial-gradient(ellipse at center,#123c51,#071726 72%);overflow:hidden}
+@media(max-width:850px){.event-card-grid{height:clamp(300px,45vh,430px)}.featured-card-grid{height:clamp(300px,45vh,430px)}}
