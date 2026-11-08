@@ -126,32 +126,59 @@ let controlled=white[9], scoreW=0,scoreB=0,elapsed=0,ballOwner=null;
 const keys={};
 let joystickInput={x:0,z:0};
 let sprinting=false;
-addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;if(e.key==='Tab'){e.preventDefault();const i=white.indexOf(controlled);controlled=white[(i+1)%white.length];}});
+addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;if(e.key==='Tab'||e.key.toLowerCase()==='q'){e.preventDefault();switchPlayer();}});
 addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;if(e.key===' ')sprinting=false;});
 document.querySelectorAll('[data-key]').forEach(b=>{const k=b.dataset.key; b.addEventListener('pointerdown',e=>{e.preventDefault();keys[k]=true});['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev,()=>keys[k]=false));});
 const msg=document.querySelector('#message');
 function closestTeamMate(){return white.filter(p=>p!==controlled).sort((a,b)=>a.group.position.distanceTo(ball.position)-b.group.position.distanceTo(ball.position))[0];}
+function switchPlayer(){
+ const candidates=white.filter(p=>p!==controlled);
+ const next=candidates.sort((a,b)=>{
+  const da=a.group.position.distanceTo(ball.position),db=b.group.position.distanceTo(ball.position);
+  const forwardA=a.group.position.z-ball.position.z,forwardB=b.group.position.z-ball.position.z;
+  return da+Math.max(0,forwardA)*.08-db-Math.max(0,forwardB)*.08;
+ })[0];
+ if(next)controlled=next;
+}
+function forwardMate(){
+ const options=white.filter(p=>p!==controlled).map(p=>({p,advance:ball.position.z-p.group.position.z,dist:p.group.position.distanceTo(ball.position)})).filter(x=>x.advance>1.2);
+ return (options.length?options: white.filter(p=>p!==controlled).map(p=>({p,advance:0,dist:p.group.position.distanceTo(ball.position)}))).sort((a,b)=>a.dist-b.dist)[0]?.p||closestTeamMate();
+}
+function releaseBallToward(target,speed,lift=1.4){
+ const dir=target.clone().sub(ball.position);dir.y=0;if(dir.lengthSq()<.01)dir.set(0,0,-1);dir.normalize();
+ ballOwner=null;ballVel.copy(dir.multiplyScalar(speed));ballVel.y=lift;
+}
 function passBall(){
- if(ball.position.distanceTo(controlled.group.position)>3.2){msg.textContent='اقترب من الكرة أولاً';return;}
- ballOwner=null;const target=closestTeamMate();const dir=target.group.position.clone().sub(ball.position).normalize();ballVel.copy(dir.multiplyScalar(15));ballVel.y=2.2;msg.textContent='تمرير!';
+ if(ballOwner!==controlled&&ball.position.distanceTo(controlled.group.position)>2.25){msg.textContent='لاعبك بعيد عن الكرة';return;}
+ const target=forwardMate(),accuracy=THREE.MathUtils.clamp(controlled.stats.pass/100,.55,.98);
+ const aim=target.group.position.clone().add(target.velocity.clone().multiplyScalar(.28));
+ aim.x+=(Math.random()-.5)*(1.8*(1-accuracy));aim.z+=(Math.random()-.5)*(1.2*(1-accuracy));
+ releaseBallToward(aim,12+accuracy*7,1.1);msg.textContent='تمرير أرضي!';
 }
 function throughBall(){
- if(ball.position.distanceTo(controlled.group.position)>4){msg.textContent='اقترب من الكرة أولاً';return;}
- ballOwner=null;const target=closestTeamMate();const dir=target.group.position.clone().sub(ball.position).normalize();ballVel.copy(dir.multiplyScalar(20));ballVel.y=3.1;msg.textContent='بينية للأمام!';
+ if(ballOwner!==controlled&&ball.position.distanceTo(controlled.group.position)>2.5){msg.textContent='لاعبك بعيد عن الكرة';return;}
+ const target=forwardMate(),lead=target.group.position.clone().add(target.velocity.clone().multiplyScalar(.75)).add(new THREE.Vector3(0,0,-(3+controlled.stats.pass/25)));
+ releaseBallToward(lead,17+controlled.stats.pass*.055,2.4);msg.textContent='بينية في المساحة!';
 }
 function tackle(){
  const rival=black.slice().sort((a,b)=>a.group.position.distanceTo(controlled.group.position)-b.group.position.distanceTo(controlled.group.position))[0];
- if(rival && rival.group.position.distanceTo(controlled.group.position)<2.25){
-   const toward=controlled.group.position.clone().sub(rival.group.position).normalize();rival.group.position.addScaledVector(toward,1.1);
-   ballOwner=controlled;ball.position.copy(controlled.group.position).add(new THREE.Vector3(0,.38,-.75));ballVel.set(0,0,0);msg.textContent='افتكاك ناجح للكرة!';
- } else msg.textContent='اقترب من المنافس لتنفيذ الالتحام';
+ if(!rival||rival.group.position.distanceTo(controlled.group.position)>2.15){msg.textContent='اقترب من المنافس لتنفيذ الالتحام';return;}
+ const distance=rival.group.position.distanceTo(controlled.group.position);
+ const advantage=(controlled.stats.strength-rival.stats.strength)*.002+(controlled.stats.agility-rival.stats.agility)*.001;
+ const success=THREE.MathUtils.clamp(.76+advantage-(distance-1)*.12,.48,.92);
+ controlled.velocity.add(controlled.group.position.clone().sub(rival.group.position).normalize().multiplyScalar(3.5));
+ if(Math.random()<success){
+  if(ballOwner===rival||ball.position.distanceTo(controlled.group.position)<2.7){
+   ballOwner=controlled;ballVel.set(0,0,0);msg.textContent='افتكاك ناجح!';
+  }else{rival.group.position.add(controlled.group.position.clone().sub(rival.group.position).normalize().multiplyScalar(.7));msg.textContent='التحام ناجح';}
+ }else{controlled.stats.stamina=Math.max(15,controlled.stats.stamina-5);msg.textContent='المنافس تفادى الالتحام';}
 }
 function shootBall(){
- if(ball.position.distanceTo(controlled.group.position)>3.2){msg.textContent='اقترب من الكرة أولاً';return;}
- ballOwner=null;const dir=new THREE.Vector3(-ball.position.x*.025,0,-1);
- dir.x+=(Math.random()-.5)*.22;dir.normalize();
- const weakFoot=0.8;const power=controlled.stats.shoot*weakFoot/100;
- ballVel.copy(dir.multiplyScalar(13+power*15));ballVel.y=3+power*3;msg.textContent='تسديدة!';
+ if(ballOwner!==controlled&&ball.position.distanceTo(controlled.group.position)>2.3){msg.textContent='لاعبك بعيد عن الكرة';return;}
+ const power=THREE.MathUtils.clamp(controlled.stats.shoot/100,.55,1);
+ const target=new THREE.Vector3(THREE.MathUtils.clamp(-ball.position.x*.32,-4.2,4.2),0,-53);
+ target.x+=(Math.random()-.5)*(3.2*(1-power));target.y=0;
+ releaseBallToward(target,17+power*15,2.8+power*2.2);msg.textContent='تسديدة على المرمى!';
 }
 addEventListener('keydown',e=>{if(e.repeat)return;if(e.key.toLowerCase()==='j')passBall();if(e.key.toLowerCase()==='k')shootBall();if(e.key.toLowerCase()==='i')throughBall();if(e.key.toLowerCase()===' ')sprinting=true;if(e.key.toLowerCase()==='e')tackle();});
 document.querySelector('[data-action="pass"]').addEventListener('pointerdown',e=>{e.preventDefault();passBall();});
@@ -182,12 +209,12 @@ function releaseStick(e){if(e.pointerId!==stickPointer)return;stickPointer=null;
 let ballVel=new THREE.Vector3();
 function moveToward(p,target,dt,maxSpeed){
  const d=target.clone().sub(p.group.position);d.y=0;
- if(d.lengthSq()>.01){d.normalize();p.velocity.lerp(d.multiplyScalar(maxSpeed),Math.min(1,dt*5));p.group.position.addScaledVector(p.velocity,dt);p.group.rotation.y=Math.atan2(p.velocity.x,p.velocity.z);}
- else p.velocity.multiplyScalar(.85);
+ if(d.lengthSq()>.04){d.normalize();const staminaFactor=.78+.22*(p.stats.stamina/100);p.velocity.lerp(d.multiplyScalar(maxSpeed*staminaFactor),Math.min(1,dt*(p===controlled?11:7)));p.group.position.addScaledVector(p.velocity,dt);if(p.velocity.lengthSq()>.15)p.group.rotation.y=Math.atan2(p.velocity.x,p.velocity.z);}
+ else p.velocity.multiplyScalar(Math.pow(.12,dt));
 }
 function resolveDuel(a,b){
  const delta=a.group.position.clone().sub(b.group.position);delta.y=0;const dist=delta.length();
- if(dist<.85){const powerA=a.stats.strength*.6+a.stats.agility*.25+a.stats.stamina*.15;const powerB=b.stats.strength*.6+b.stats.agility*.25+b.stats.stamina*.15;const winner=powerA>=powerB?a:b,loser=winner===a?b:a;delta.normalize();loser.group.position.addScaledVector(delta,-.18);winner.stats.stamina=Math.max(20,winner.stats.stamina-.025);}
+ if(dist<.82){if(dist>.001)delta.normalize();const separation=(.82-dist)*.5;a.group.position.addScaledVector(delta,separation);b.group.position.addScaledVector(delta,-separation);}
 }
 function resetBall(){ballOwner=null;ball.position.set(0,.38,0);ballVel.set(0,0,0);white.forEach(p=>p.group.position.copy(p.homePosition));black.forEach(p=>p.group.position.copy(p.homePosition));}
 const clockEl=document.querySelector('#clock'),scoreEl=document.querySelector('#score');
@@ -196,22 +223,24 @@ function animate(){
  requestAnimationFrame(animate);if(root.classList.contains('game-hidden'))return;const dt=Math.min(clock.getDelta(),.035);elapsed+=dt;
  // Human-controlled player
  const input=new THREE.Vector3((keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0)+joystickInput.x,0,(keys.s||keys.arrowdown?1:0)-(keys.w||keys.arrowup?1:0)+joystickInput.z);
- if(input.lengthSq()>0){input.clampLength(0,1);const moveSpeed=controlled.stats.speed*(sprinting?1.48:1);controlled.velocity.lerp(input.clone().multiplyScalar(moveSpeed),Math.min(1,dt*8));controlled.group.position.addScaledVector(controlled.velocity,dt);controlled.group.rotation.y=Math.atan2(input.x,input.z);}
- else controlled.velocity.multiplyScalar(.82);
- // Teammates keep a 4-3-3 shape while offering passing lanes.
- for(const p of white){if(p!==controlled){const target=p.homePosition.clone().lerp(ball.position,.32);target.z=Math.max(-38,Math.min(45,target.z));moveToward(p,target,dt,p.stats.speed*.72);}}
- // The three closest opponents press; the rest hold their defensive shape.
- const pressing=new Set(black.slice().sort((a,b)=>a.group.position.distanceTo(ball.position)-b.group.position.distanceTo(ball.position)).slice(0,3));
- for(const p of black){const target=pressing.has(p)?ball.position.clone().add(new THREE.Vector3(0,0,1.1)):p.homePosition.clone().lerp(ball.position,.12);moveToward(p,target,dt,p.stats.speed*.76);}
+ if(input.lengthSq()>0){input.clampLength(0,1);const stamina=controlled.stats.stamina/100;const moveSpeed=controlled.stats.speed*(sprinting?1.62:1)*(.76+.24*stamina);controlled.velocity.lerp(input.clone().multiplyScalar(moveSpeed),Math.min(1,dt*13));controlled.group.position.addScaledVector(controlled.velocity,dt);controlled.group.rotation.y=Math.atan2(input.x,input.z);if(sprinting)controlled.stats.stamina=Math.max(12,controlled.stats.stamina-13*dt);}
+ else{controlled.velocity.multiplyScalar(Math.pow(.035,dt));controlled.stats.stamina=Math.min(100,controlled.stats.stamina+7*dt);}
+ // Teammates make passing lanes and offer forward support instead of all chasing the ball.
+ for(const p of white){if(p!==controlled){const support=ballOwner===controlled&&p.homePosition.z<controlled.group.position.z?-.12:.22;const target=p.homePosition.clone().lerp(ball.position,support);target.z=THREE.MathUtils.clamp(target.z,-39,46);moveToward(p,target,dt,p.stats.speed*.78);p.stats.stamina=Math.min(100,p.stats.stamina+2*dt);}}
+ // AI presses in layers; the ball carrier attacks the goal while nearby teammates support.
+ const blackCarrier=ballOwner?.team==='black'?ballOwner:null;
+ const pressing=new Set(black.slice().sort((a,b)=>a.group.position.distanceTo(ball.position)-b.group.position.distanceTo(ball.position)).slice(0,blackCarrier?2:3));
+ for(const p of black){let target;if(p===blackCarrier)target=new THREE.Vector3(THREE.MathUtils.clamp(-p.group.position.x*.22,-15,15),0,52);else if(pressing.has(p))target=ball.position.clone().add(new THREE.Vector3(0,0,-1.15));else target=p.homePosition.clone().lerp(ball.position,.1);moveToward(p,target,dt,p.stats.speed*.82);p.stats.stamina=Math.min(100,p.stats.stamina+1.5*dt);}
  // Keep players inside the pitch
  for(const p of players){p.group.position.x=THREE.MathUtils.clamp(p.group.position.x,-32,32);p.group.position.z=THREE.MathUtils.clamp(p.group.position.z,-50,50);for(const q of players)if(q!==p&&q.team!==p.team)resolveDuel(p,q);}
  // Ball possession, close control and grounded/aerial ball physics.
  if(ballOwner){
   if(ballOwner.team==='black')ballOwner.group.rotation.y=0;
   const forward=new THREE.Vector3(Math.sin(ballOwner.group.rotation.y),0,Math.cos(ballOwner.group.rotation.y));
-  const dribbleTarget=ballOwner.group.position.clone().addScaledVector(forward,.82);dribbleTarget.y=.38;
-  ball.position.lerp(dribbleTarget,Math.min(1,dt*13));ballVel.set(0,0,0);
-  if(ballOwner.team==='black'&&ballOwner.group.position.z>36){ballOwner=null;ballVel.set((Math.random()-.5)*3,2.2,17);msg.textContent='المنافس يسدد!';}
+  const sprintTouch=ballOwner===controlled&&sprinting?1.18:.78;
+  const dribbleTarget=ballOwner.group.position.clone().addScaledVector(forward,sprintTouch);dribbleTarget.y=.34;
+  ball.position.lerp(dribbleTarget,Math.min(1,dt*(ballOwner===controlled?18:13)));ballVel.set(0,0,0);
+  if(ballOwner.team==='black'&&ballOwner.group.position.z>37){const target=new THREE.Vector3(THREE.MathUtils.clamp(-ballOwner.group.position.x*.28,-4,4),0,-0);const dir=target.sub(ballOwner.group.position);dir.y=0;dir.normalize();ballOwner=null;ballVel.copy(dir.multiplyScalar(19));ballVel.y=3.4;msg.textContent='المنافس يسدد!';}
  }else{
   ballVel.y-=9.81*dt;ball.position.addScaledVector(ballVel,dt);
   if(ball.position.y<.36){ball.position.y=.36;if(ballVel.y<0)ballVel.y*=-.34;ballVel.x*=.985;ballVel.z*=.985;}
@@ -220,7 +249,7 @@ function animate(){
   if(nearest&&nearest.group.position.distanceTo(ball.position)<1.2&&ballVel.length()<6){ballOwner=nearest;if(nearest.team==='white'){controlled=nearest;msg.textContent='استحوذت على الكرة';}else msg.textContent='الخصم استحوذ على الكرة';}
  }
  // Animate running limbs from each player's actual movement.
- for(const p of players){const motion=Math.min(1,p.velocity.length()/3.6),swing=Math.sin(elapsed*12+p.phase)*motion*.58;p.legs[0].rotation.x=swing;p.legs[1].rotation.x=-swing;p.arms[0].rotation.x=-swing*.62;p.arms[1].rotation.x=swing*.62;}
+ for(const p of players){const motion=Math.min(1,p.velocity.length()/4),stride=Math.sin(elapsed*(sprinting&&p===controlled?17:13)+p.phase)*motion*.72;p.legs[0].rotation.x=stride;p.legs[1].rotation.x=-stride;p.arms[0].rotation.x=-stride*.58;p.arms[1].rotation.x=stride*.58;p.group.position.y=Math.abs(Math.sin(elapsed*13+p.phase))*.045*motion; p.group.rotation.z=THREE.MathUtils.clamp(-p.velocity.length()*.012,-.08,.08);}
  // Goals
  if(Math.abs(ball.position.z)>52 && Math.abs(ball.position.x)<3.65 && ball.position.y<2.5){if(ball.position.z<0)scoreW++;else scoreB++;scoreEl.textContent=`${scoreW} - ${scoreB}`;msg.textContent='GOAL!';resetBall();}
  if(Math.abs(ball.position.x)>34||Math.abs(ball.position.z)>56){resetBall();}
