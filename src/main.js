@@ -427,7 +427,7 @@ const leaguePlayerPools={
   {name:'Khvicha Kvaratskhelia',rating:89,position:'LW',club:'Paris SG',nation:'Georgia',stats:[86,85,84,90,59,81],image:'https://assets.fodder.gg/renders/247635.webp'}
  ]
 };
-if(!localStorage.getItem('ut27-welcome-pack-claimed')){
+if(!localStorage.getItem('ut27-welcome-pack-claimed')&&clubPlayers.length===0){
  const all=Object.entries(leaguePlayerPools).flatMap(([league,pool])=>pool.map(p=>({...p,league})));
  const take=(arr,n)=>{const a=arr.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a.slice(0,n);};
  const chosen=[...take(all.filter(p=>p.position==='GK'),1),...take(all.filter(p=>['LB','RB','CB','LWB','RWB'].includes(p.position)),4),...take(all.filter(p=>['CM','CDM','CAM','LM','RM'].includes(p.position)),3),...take(all.filter(p=>['LW','RW','ST','CF'].includes(p.position)),3)];
@@ -514,7 +514,7 @@ function renderBench(){
 function renderSquad(){
  const select=$('#formation-select');if(select)select.value=selectedFormation;
  const coords=formationPresets[selectedFormation]||formationPresets['4-3-3'];
- $$('#squad-pitch [data-slot]').forEach((btn,i)=>{const player=clubPlayers.find(p=>p.id===squadAssignments[btn.dataset.slot]||p.name===squadAssignments[btn.dataset.slot]);const [x,z]=coords[i]||[0,0];btn.style.left=((x+38)/76*100)+'%';btn.style.top=((60-z)/120*100)+'%';btn.style.bottom='auto';btn.classList.toggle('selected',!!player);btn.innerHTML=player?'<span class="squad-token-rating">'+player.rating+'</span><span class="squad-token-position">'+player.position+'</span><span class="squad-token-name">'+player.name.split(' ').slice(-1)[0]+'</span>':'<span class="squad-token-empty">'+btn.dataset.slot+'</span>';});
+ $$('#squad-pitch [data-slot]').forEach((btn,i)=>{const player=clubPlayers.find(p=>p.id===squadAssignments[btn.dataset.slot]||p.name===squadAssignments[btn.dataset.slot]);const [x,z]=coords[i]||[0,0];btn.style.left=((x+38)/76*100)+'%';btn.style.top=((60+z)/120*100)+'%';btn.style.bottom='auto';btn.classList.toggle('selected',!!player);btn.innerHTML=player?'<span class="squad-token-rating">'+player.rating+'</span><span class="squad-token-position">'+player.position+'</span><span class="squad-token-name">'+player.name.split(' ').slice(-1)[0]+'</span>':'<span class="squad-token-empty">'+btn.dataset.slot+'</span>';});
  const label=$('#formation-label');if(label)label.textContent=selectedFormation;renderBench();renderClubCollection();
  const ratings=Object.values(squadAssignments).map(n=>clubPlayers.find(p=>p.id===n||p.name===n)?.rating||0);const ratingLabel=document.querySelector('.page[data-page="squad"] .mode-count');if(ratingLabel)ratingLabel.textContent='التقييم '+(ratings.length?Math.round(ratings.reduce((a,b)=>a+b,0)/ratings.length):0);
  const count=formationSlots.filter(slot=>squadAssignments[slot]&&clubPlayers.some(p=>p.id===squadAssignments[slot]||p.name===squadAssignments[slot])).length;const gateNote=$('#squad-gate-note');if(gateNote)gateNote.textContent='التشكيلة: '+count+'/11 لاعب';
