@@ -372,7 +372,7 @@ function renderBench(){
   bench.slice(0,12).forEach(p=>{
     const b=document.createElement('button');b.className='bench-player';b.type='button';
     b.innerHTML='<b>'+p.rating+'</b><br>'+p.position+'<br>'+p.name.split(' ').slice(-1)[0];
-    b.addEventListener('click',()=>openSquadPicker(activeSquadSlot||p.position));
+    b.addEventListener('click',()=>{const preferred=activeSquadSlot;const choices=p.position==='GK'?['GK']:['LB','CB1','CB2','RB','CM1','CM2','CM3','LW','ST','RW'];const slot=preferred&&!squadAssignments[preferred]?preferred:choices.find(s=>!squadAssignments[s]&&(s===p.position||(s.startsWith('CB')&&p.position==='CB')||(s.startsWith('CM')&&['CM','CDM','CAM'].includes(p.position))||(s==='LW'&&['LW','LM'].includes(p.position))||(s==='RW'&&['RW','RM'].includes(p.position))||(s==='ST'&&['ST','CF'].includes(p.position))||(s==='LB'&&['LB','LWB'].includes(p.position))||(s==='RB'&&['RB','RWB'].includes(p.position))));if(slot){squadAssignments[slot]=p.name;localStorage.setItem('ut27-squad',JSON.stringify(squadAssignments));activeSquadSlot='';renderSquad();}else openSquadPicker(p.position);});
     list.appendChild(b);
   });
 }
@@ -394,7 +394,7 @@ function openSquadPicker(slot){
   const list=$('#squad-picker-list');list.replaceChildren();
   clubPlayers.filter(p=>(!Object.values(squadAssignments).includes(p.name)||squadAssignments[slot]===p.name) && (p.position===slot || (slot.startsWith('CB')&&p.position==='CB') || (slot.startsWith('CM')&&['CM','CDM','CAM'].includes(p.position)) || (slot==='LW'&&['LW','LM'].includes(p.position)) || (slot==='RW'&&['RW','RM'].includes(p.position)) || (slot==='LB'&&['LB','LWB'].includes(p.position)) || (slot==='RB'&&['RB','RWB'].includes(p.position)) || (slot==='ST'&&['ST','CF'].includes(p.position)) || (slot==='GK'&&p.position==='GK'))).forEach(p=>{
     const b=document.createElement('button');b.type='button';b.innerHTML='<b>'+p.rating+' OVR</b><br>'+p.name+'<br>'+p.position;
-    b.addEventListener('click',()=>{squadAssignments[slot]=p.name;localStorage.setItem('ut27-squad',JSON.stringify(squadAssignments));$('#squad-picker').classList.add('hidden');renderSquad();});list.appendChild(b);
+    b.addEventListener('click',()=>{squadAssignments[slot]=p.name;localStorage.setItem('ut27-squad',JSON.stringify(squadAssignments));activeSquadSlot='';$('#squad-picker').classList.add('hidden');renderSquad();});list.appendChild(b);
   });
   if(!list.children.length)list.innerHTML='<span class="bench-empty">لا يوجد لاعب مناسب لهذا المركز في النادي.</span>';
   $('#squad-picker').classList.remove('hidden');
@@ -462,7 +462,7 @@ function openSbcChallenge(card){
  $('#sbc-result').textContent='';
  const pool=$('#sbc-player-pool');pool.replaceChildren();
  if(clubPlayers.length<3){$('#sbc-result').textContent='تحتاج إلى 3 لاعبين على الأقل في النادي لإكمال التحدي.';$('#sbc-submit').disabled=true;$('#sbc-submit-panel').classList.remove('hidden');return;}
- clubPlayers.forEach((p,index)=>{const b=document.createElement('button');b.type='button';b.className='sbc-player-option';b.innerHTML='<b>'+p.rating+'</b><small>'+p.position+'</small><strong>'+p.name+'</strong>';b.addEventListener('click',()=>{if(selectedSbcPlayers.includes(index)){selectedSbcPlayers=selectedSbcPlayers.filter(x=>x!==index);b.classList.remove('selected');}else if(selectedSbcPlayers.length<3){selectedSbcPlayers.push(index);b.classList.add('selected');}$('#sbc-select-count').textContent='اختر 3 لاعبين من النادي ('+selectedSbcPlayers.length+'/3)';$('#sbc-submit').disabled=selectedSbcPlayers.length!==3;});pool.appendChild(b);});
+ const alreadySelected=new Set(Object.values(squadAssignments));clubPlayers.forEach((p,index)=>{if(alreadySelected.has(p.name))return;const b=document.createElement('button');b.type='button';b.className='sbc-player-option';b.innerHTML='<b>'+p.rating+'</b><small>'+p.position+'</small><strong>'+p.name+'</strong>';b.addEventListener('click',()=>{if(selectedSbcPlayers.includes(index)){selectedSbcPlayers=selectedSbcPlayers.filter(x=>x!==index);b.classList.remove('selected');}else if(selectedSbcPlayers.length<3){selectedSbcPlayers.push(index);b.classList.add('selected');}$('#sbc-select-count').textContent='اختر 3 لاعبين من النادي ('+selectedSbcPlayers.length+'/3)';$('#sbc-submit').disabled=selectedSbcPlayers.length!==3;});pool.appendChild(b);});
  $('#sbc-select-count').textContent='اختر 3 لاعبين من النادي (0/3)';$('#sbc-submit').disabled=true;$('#sbc-submit-panel').classList.remove('hidden');
 }
 $('#sbc-challenge-grid .challenge-card').forEach(card=>{card.tabIndex=0;card.addEventListener('click',()=>openSbcChallenge(card));card.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openSbcChallenge(card);}});});
@@ -471,6 +471,7 @@ $('#sbc-submit').addEventListener('click',()=>{
  if(selectedSbcPlayers.length!==3)return;
  const consumed=selectedSbcPlayers.map(i=>clubPlayers[i]);
  const indexes=[...selectedSbcPlayers].sort((a,b)=>b-a);indexes.forEach(i=>clubPlayers.splice(i,1));
+ consumed.forEach(p=>Object.keys(squadAssignments).forEach(slot=>{if(squadAssignments[slot]===p.name)delete squadAssignments[slot];}));localStorage.setItem('ut27-squad',JSON.stringify(squadAssignments));
  const rewardSource=eventPlayers[Math.floor(Math.random()*eventPlayers.length)];
  const reward={...rewardSource,id:'sbc-reward-'+Date.now(),tier:'SBC Reward'};
  clubPlayers.push(reward);saveClub();renderSquad();
