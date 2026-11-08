@@ -329,8 +329,15 @@ function buildPlayerCard(player,index,featured=false) {
 function renderEventCards(){
   const grid=$('#event-card-grid'),featured=$('#featured-card-grid');
   if(!grid||!featured)return;
-  grid.innerHTML='<img class="event-promo-image" alt="FC 27 RTTK Team 1 — full player squad" loading="eager" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'grid\'"><div class="promo-image-fallback">صورة فريق RTTK الكامل — بانتظار مصدر الصورة الأصلي</div>';
-  featured.innerHTML='<img class="featured-promo-image" src="https://fifplay.com/img/fc-27-rttk-team-1-players.jpg" alt="FC 27 RTTK featured players" loading="eager" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'grid\'"><div class="promo-image-fallback">صورة اللاعبين الأربعة المميزين — بانتظار الصورة الأصلية</div>';
+  const teamImage='https://www.fifplay.com/img/public/fc-27-rttk-team-1.jpg';
+  grid.innerHTML='<img class="event-promo-image" src="'+teamImage+'" alt="FC 27 RTTK Team 1 — all 30 official player cards" loading="eager" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'grid\'"><div class="promo-image-fallback">تعذر تحميل صورة فريق RTTK من المصدر</div>';
+  const featuredPlayers=[
+    {name:'Jude Bellingham',rating:91,position:'CAM',crop:'bellingham'},
+    {name:'Ousmane Dembélé',rating:91,position:'ST',crop:'dembele'},
+    {name:'Pedri',rating:91,position:'CM',crop:'pedri'},
+    {name:'Luis Díaz',rating:90,position:'LM',crop:'diaz'}
+  ];
+  featured.innerHTML=featuredPlayers.map(p=>'<div class="featured-player-crop '+p.crop+'" role="img" aria-label="'+p.name+' RTTK '+p.rating+'"><img src="'+teamImage+'" alt="'+p.name+' RTTK '+p.rating+'" loading="eager"><span>'+p.rating+' · '+p.position+'</span><b>'+p.name+'</b></div>').join('');
 }
 let selectedPlayer=null;
 function openPlayerModal(player,index){
