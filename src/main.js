@@ -312,6 +312,7 @@ const eventPlayers = [
 ];
 let clubPlayers=(()=>{try{return JSON.parse(localStorage.getItem('ut27-club')||'[]').filter(p=>p.club!=='UT Academy'&&!String(p.id||'').startsWith('starter-'))}catch{return []}})();
 function saveClub(){localStorage.setItem('ut27-club',JSON.stringify(clubPlayers));}
+saveClub(); // purge the old fake starter squad from previous builds
 const leaguePlayerPools={
  'Premier League':[
   {name:'Erling Haaland',rating:91,position:'ST',club:'Manchester City',nation:'Norway',stats:[87,92,71,80,47,89],image:'https://assets.fodder.gg/renders/239085.webp'},
@@ -416,6 +417,8 @@ function closePlayerModal(){$('#player-modal').classList.add('hidden');selectedP
 renderEventCards();
 
 const squadAssignments = (()=>{try{return JSON.parse(localStorage.getItem('ut27-squad')||'{}')}catch{return {}}})();
+Object.keys(squadAssignments).forEach(slot=>{const ref=squadAssignments[slot];if(!clubPlayers.some(p=>p.id===ref||p.name===ref))delete squadAssignments[slot];});
+localStorage.setItem('ut27-squad',JSON.stringify(squadAssignments));
 let activeSquadSlot = '';
 const benchPanel = $('#bench-panel');
 function renderBench(){
