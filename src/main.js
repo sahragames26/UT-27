@@ -329,8 +329,8 @@ function buildPlayerCard(player,index,featured=false) {
 function renderEventCards(){
   const grid=$('#event-card-grid'),featured=$('#featured-card-grid');
   if(!grid||!featured)return;
-  grid.innerHTML='<img class="event-promo-image" alt="FC 27 RTTK Team 1 — full player squad" loading="eager" onerror="this.style.display=\\'none\\';this.nextElementSibling.style.display=\\'grid\\'"><div class="promo-image-fallback">صورة فريق RTTK الكامل — لم يتم العثور على ملف الصورة الأصلي المباشر بعد</div>';
-  featured.innerHTML='<img class="featured-promo-image" alt="FC 27 RTTK featured four players" loading="eager" onerror="this.style.display=\\'none\\';this.nextElementSibling.style.display=\\'grid\\'"><div class="promo-image-fallback">صورة الأربعة المميزين الأصلية — لم يتم العثور على ملف الصورة الأصلي المباشر بعد</div>';
+  grid.innerHTML=`<img class="event-promo-image" alt="FC 27 RTTK Team 1 — full player squad" loading="eager" onerror="this.style.display='none';this.nextElementSibling.style.display='grid'"><div class="promo-image-fallback">صورة فريق RTTK الكامل — لم يتم العثور على ملف الصورة الأصلي المباشر بعد</div>`;
+  featured.innerHTML=`<img class="featured-promo-image" alt="FC 27 RTTK featured four players" loading="eager" onerror="this.style.display='none';this.nextElementSibling.style.display='grid'"><div class="promo-image-fallback">صورة الأربعة المميزين الأصلية — لم يتم العثور على ملف الصورة الأصلي المباشر بعد</div>`;
 }
 
 let selectedPlayer=null;
