@@ -440,3 +440,16 @@ body,.app-shell{background-color:transparent}
 .page[data-page="store"] .pack-grid{overflow:auto;overscroll-behavior:contain}
 .pack-player-item{animation:gold-card-arrive .45s cubic-bezier(.2,.8,.2,1) both}
 @keyframes gold-card-arrive{from{opacity:0;transform:translateY(18px) scale(.94)}to{opacity:1;transform:translateY(0) scale(1)}}
+
+/* UT27 touch-control revision: four-button diamond on the right, analog on the left */
+.mobile-controls{position:fixed;inset:auto 16px max(14px,env(safe-area-inset-bottom)) 16px;display:flex;flex-direction:row;justify-content:space-between;align-items:flex-end;gap:14px;pointer-events:none;z-index:30;direction:ltr}
+.stick-zone{order:0;flex:0 0 clamp(112px,18vw,158px);width:clamp(112px,18vw,158px);height:clamp(112px,18vw,158px)}
+.action-cluster{order:1;display:grid;grid-template-columns:repeat(2,clamp(64px,9vw,82px));grid-template-rows:repeat(2,clamp(64px,9vw,82px));gap:9px;align-items:center;justify-items:center;direction:ltr}
+.action-btn{position:relative;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1px;font-size:clamp(10px,1.4vw,13px)!important;line-height:1.1;white-space:normal}
+.action-btn.through{grid-column:1;grid-row:1}
+.action-btn.shoot{grid-column:2;grid-row:1;width:100%;height:100%}
+.action-btn.pass{grid-column:1;grid-row:2}
+.action-btn.sprint-tackle{grid-column:2;grid-row:2;width:100%;height:100%;font-size:clamp(9px,1.25vw,12px)!important}
+.gesture-arrows{font-size:13px;line-height:1;opacity:.8}
+@media(max-width:700px){.mobile-controls{inset:auto 10px max(12px,env(safe-area-inset-bottom)) 10px}.stick-zone{flex-basis:clamp(104px,27vw,128px);width:clamp(104px,27vw,128px);height:clamp(104px,27vw,128px)}.action-cluster{grid-template-columns:repeat(2,clamp(56px,15vw,68px));grid-template-rows:repeat(2,clamp(56px,15vw,68px));gap:6px}.action-btn{font-size:10px!important}.action-btn.sprint-tackle{font-size:9px!important}}
+@media(max-width:380px){.mobile-controls{inset:auto 7px max(9px,env(safe-area-inset-bottom)) 7px}.action-cluster{grid-template-columns:repeat(2,52px);grid-template-rows:repeat(2,52px);gap:5px}.stick-zone{width:100px;height:100px;flex-basis:100px}}
