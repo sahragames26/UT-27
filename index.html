@@ -46,21 +46,25 @@
 
   <div id="app-shell" class="app-shell hidden">
     <header class="top-header">
-      <div class="profile-chip"><span class="level-badge">1</span><span><b>UT CLUB</b><small>المستوى 1</small></span></div>
-      <div class="header-brand-group"><div class="brand-mark">UT<span>27</span></div><button id="quick-menu-toggle" class="quick-menu-toggle header-quick-toggle" aria-label="فتح القائمة السريعة">☰ <span>القائمة السريعة</span></button></div>
-      <div class="currency-strip"><span>🪙 <b id="coin-count">5,436</b></span><span>💎 <b>0</b></span><span class="points">FC Points <b>0</b></span></div>
-      <button id="settings-shortcut" class="icon-btn" aria-label="الإعدادات">⚙</button>
+      <div class="header-left">
+        <div class="brand-mark">UT<span>27</span></div>
+        <button id="quick-menu-toggle" class="quick-menu-toggle header-quick-toggle" aria-label="فتح القائمة السريعة">☰ <span>القائمة السريعة</span></button>
+        <nav id="main-tabs" class="main-tabs" aria-label="القائمة الرئيسية">
+          <button class="tab-btn active" data-tab="home">الرئيسية</button>
+          <button class="tab-btn" data-tab="play">اللعب</button>
+          <button class="tab-btn" data-tab="objectives">الأهداف</button>
+          <button class="tab-btn" data-tab="squad">النادي</button>
+          <button class="tab-btn" data-tab="sbc">SBC</button>
+          <button class="tab-btn" data-tab="transfers">الانتقالات</button>
+          <button class="tab-btn" data-tab="store">المتجر</button>
+        </nav>
+      </div>
+      <div class="header-right">
+        <div class="currency-strip"><span>🪙 <b id="coin-count">5,436</b></span><span>💎 <b>0</b></span><span class="points">FC Points <b>0</b></span><span class="xp-chip">⭐ XP <b id="xp-count">0</b> · المستوى <b class="level-inline">1</b></span></div>
+        <div class="profile-chip"><span class="level-badge">1</span><span><b>UT CLUB</b><small>المستوى 1</small></span></div>
+        <button id="settings-shortcut" class="icon-btn" aria-label="الإعدادات">⚙</button>
+      </div>
     </header>
-
-    <nav id="main-tabs" class="main-tabs" aria-label="القائمة الرئيسية">
-      <button class="tab-btn active" data-tab="home">الرئيسية</button>
-      <button class="tab-btn" data-tab="play">اللعب</button>
-      <button class="tab-btn" data-tab="objectives">الأهداف</button>
-      <button class="tab-btn" data-tab="squad">النادي</button>
-      <button class="tab-btn" data-tab="sbc">SBC</button>
-      <button class="tab-btn" data-tab="transfers">الانتقالات</button>
-      <button class="tab-btn" data-tab="store">المتجر</button>
-    </nav>
 
     <main id="main-content" class="main-content">
       <section class="page active" data-page="home">
