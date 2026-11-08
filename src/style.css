@@ -240,3 +240,15 @@ html,body{height:100%;overflow:hidden}
 .fc-home-footer{display:flex;justify-content:center;gap:10px;margin-top:12px}
 @media(max-width:850px){.fc-home-grid{grid-template-columns:1fr}.fc-side-panel{order:2}.event-card-grid{grid-template-columns:repeat(5,minmax(0,1fr))}.featured-card-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
 @media(max-width:560px){.event-card-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}.featured-card-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.visual-player-card .card-stat-line{font-size:5px}.fc-home-grid{gap:9px}}
+
+.modal-face-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:12px;width:100%}
+.modal-face-stats>span{display:flex;flex-direction:column;align-items:center;background:#ffffff12;border:1px solid #ffffff22;border-radius:8px;padding:6px 3px}
+.modal-face-stats b{font-size:17px;color:#f4d47a}.modal-face-stats small{font-size:9px;color:#c4d2df;font-weight:900}
+.stats-pending{grid-column:1/-1;color:#d7e0e8;font-size:11px}
+.player-modal-art{display:flex;flex-direction:column;align-items:center;gap:4px;min-height:245px;padding:18px 12px 10px;position:relative;overflow:hidden;border:2px solid #d9bd69;border-radius:22px;background:radial-gradient(ellipse at 50% 28%,#287a8a,#153d50 48%,#0a1a2b 80%);box-shadow:0 15px 40px #0008,inset 0 0 0 4px #d9bd6922;transform:perspective(900px) rotateY(-3deg)}
+.player-modal-art>b{font-size:38px;line-height:1;color:#f7dc87}.player-modal-art>span{font-size:15px;font-weight:900}.player-modal-art>strong{font-size:22px;text-shadow:0 3px 8px #000}.player-modal-art>small{font-size:9px;letter-spacing:1px;color:#f1d78b}
+.mode-list{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.mode-card{min-width:0;flex-direction:column;min-height:0}
+.mode-art{width:100%;min-width:0;height:115px;font-size:52px}
+.mode-info{padding:13px}.mode-info h2{font-size:18px}.mode-info p{font-size:11px;line-height:1.5}
+@media(max-width:760px){.mode-list{grid-template-columns:1fr}.mode-card{flex-direction:row}.mode-art{width:27%;height:auto;min-height:150px}.mode-info{padding:12px}}
