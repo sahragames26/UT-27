@@ -196,6 +196,7 @@ function animate(){
  for(const p of players){p.group.position.x=THREE.MathUtils.clamp(p.group.position.x,-32,32);p.group.position.z=THREE.MathUtils.clamp(p.group.position.z,-50,50);for(const q of players)if(q!==p&&q.team!==p.team)resolveDuel(p,q);}
  // Ball possession, close control and grounded/aerial ball physics.
  if(ballOwner){
+  if(ballOwner.team==='black')ballOwner.group.rotation.y=0;
   const forward=new THREE.Vector3(Math.sin(ballOwner.group.rotation.y),0,Math.cos(ballOwner.group.rotation.y));
   const dribbleTarget=ballOwner.group.position.clone().addScaledVector(forward,.82);dribbleTarget.y=.38;
   ball.position.lerp(dribbleTarget,Math.min(1,dt*13));ballVel.set(0,0,0);
@@ -395,6 +396,7 @@ function openPlayerModal(player,index){
   $('#player-modal-art').className=`player-modal-art card-tone-${index%6}`;
   const statMarkup=player.stats?.length===6?player.stats.map((v,i)=>'<span><b>'+v+'</b><small>'+labelsForPlayer(player)[i]+'</small></span>').join(''):'<span class="stats-pending">تفاصيل السمات قيد التحديث</span>';
   $('#player-modal-art').innerHTML=player.image?'<img class="modal-real-card" src="'+player.image+'" alt="'+player.name+' Gold '+player.rating+'"><div class="modal-card-caption">'+(player.club||'')+' · '+(player.league||'Gold')+'</div>':'<b>'+player.rating+'</b><span>'+player.position+'</span><strong>'+player.name+'</strong><small>FC 27 • Gold</small><div class="modal-face-stats">'+statMarkup+'</div>';
+  const modalImage=$('#player-modal-art').querySelector('img');if(modalImage)modalImage.onerror=()=>{$('#player-modal-art').innerHTML='<b>'+player.rating+'</b><span>'+player.position+'</span><strong>'+player.name+'</strong><small>FC 27 • Gold</small><div class="modal-face-stats">'+statMarkup+'</div>';};
   $('#player-actions').classList.add('hidden');
   $('#player-confirm').classList.remove('hidden');
   $('#player-modal').classList.remove('hidden');
@@ -543,6 +545,7 @@ $$( '[data-difficulty]' ).forEach(btn => btn.addEventListener('click', () => {
 $('#start-match').addEventListener('click', () => {
   if (!selectedDifficulty) return;
   $('#difficulty-note').textContent = `بدأت المباراة على مستوى ${selectedDifficulty}`;
+  resetBall();elapsed=0;scoreW=0;scoreB=0;controlled=white[9];scoreEl.textContent='0 - 0';clockEl.textContent='00:00';
   appShell.classList.add('hidden');
   gameRoot.classList.remove('game-hidden');
   matchHud.classList.remove('hidden');
