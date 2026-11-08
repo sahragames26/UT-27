@@ -427,7 +427,7 @@ function renderSquad(){
   });
   renderBench();
   renderClubCollection();
-  const ratings=Object.values(squadAssignments).map(n=>clubPlayers.find(p=>p.name===n)?.rating||0);
+  const ratings=Object.values(squadAssignments).map(n=>clubPlayers.find(p=>p.id===n||p.name===n)?.rating||0);
   const ratingLabel=document.querySelector('.page[data-page="squad"] .mode-count');
   if(ratingLabel)ratingLabel.textContent='التقييم '+(ratings.length?Math.round(ratings.reduce((a,b)=>a+b,0)/ratings.length):0);
 }
