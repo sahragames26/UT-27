@@ -307,6 +307,8 @@ const eventPlayers = [
   {name:"Timothy Weah",rating:85,position:"RM",club:"Marseille",competition:"UEL",stats:[92,82,81,83,81,78]}
 ];
 const statLabels = ["PAC","SHO","PAS","DRI","DEF","PHY"];
+const keeperStatLabels = ["DIV","HAN","KIC","REF","SPD","POS"];
+function labelsForPlayer(player){return player.position==='GK'?keeperStatLabels:statLabels;}
 function buildPlayerCard(player,index,featured=false) {
   const card=document.createElement('button');
   card.type='button';
@@ -314,7 +316,7 @@ function buildPlayerCard(player,index,featured=false) {
   card.setAttribute('aria-label',`فتح بطاقة ${player.name}، تقييم ${player.rating}`);
   card.dataset.playerIndex=String(index);
   const stats=player.stats||[];
-  card.innerHTML=`<span class="card-rating">${player.rating}</span><span class="card-position">${player.position}</span><span class="card-portrait"></span><span class="card-player-name">${player.name}</span><span class="card-club">${player.club||''}</span><span class="card-stat-line">${stats.length===6?stats.map((v,i)=>statLabels[i]+' '+v).join(' · '):'RTTK • FC 27'}</span><span class="card-foot-mark">RTTK</span>`;
+  card.innerHTML=`<span class="card-rating">${player.rating}</span><span class="card-position">${player.position}</span><span class="card-portrait"></span><span class="card-player-name">${player.name}</span><span class="card-club">${player.club||''}</span><span class="card-stat-line">${stats.length===6?stats.map((v,i)=>labelsForPlayer(player)[i]+' '+v).join(' · '):'RTTK • FC 27'}</span><span class="card-foot-mark">RTTK</span>`;
   card.addEventListener('click',()=>openPlayerModal(player,index));
   card.addEventListener('pointermove',e=>{
     const b=card.getBoundingClientRect(),x=(e.clientX-b.left)/b.width,y=(e.clientY-b.top)/b.height;
@@ -344,7 +346,7 @@ function makeCardTexture(player,index){
   ctx.fillStyle='#c8d8e0';ctx.font='bold 19px Arial';ctx.fillText((player.club||'FC 27')+' • RTTK',210,510,360);
   ctx.fillStyle=accent;ctx.font='bold 20px Arial';
   if(player.stats?.length===6){
-    const labels=['PAC','SHO','PAS','DRI','DEF','PHY'];
+    const labels=player.position==='GK'?['DIV','HAN','KIC','REF','SPD','POS']:['PAC','SHO','PAS','DRI','DEF','PHY'];
     labels.forEach((label,i)=>{const x=70+(i%3)*140,y=548+Math.floor(i/3)*30;ctx.fillText(label+' '+player.stats[i],x,y);});
   } else ctx.fillText('ROAD TO THE KNOCKOUTS',210,560);
   ctx.textAlign='start';
@@ -414,7 +416,7 @@ function openPlayerModal(player,index){
   selectedPlayer={player,index};
   $('#player-modal-title').textContent=player.name+` • ${player.position} • ${player.rating}`;
   $('#player-modal-art').className=`player-modal-art card-tone-${index%6}`;
-  const statMarkup=player.stats?.length===6?player.stats.map((v,i)=>'<span><b>'+v+'</b><small>'+statLabels[i]+'</small></span>').join(''):'<span class="stats-pending">تفاصيل السمات قيد التحديث</span>';
+  const statMarkup=player.stats?.length===6?player.stats.map((v,i)=>'<span><b>'+v+'</b><small>'+labelsForPlayer(player)[i]+'</small></span>').join(''):'<span class="stats-pending">تفاصيل السمات قيد التحديث</span>';
   $('#player-modal-art').innerHTML='<b>'+player.rating+'</b><span>'+player.position+'</span><strong>'+player.name+'</strong><small>ROAD TO THE KNOCKOUTS • FC 27</small><div class="modal-face-stats">'+statMarkup+'</div>';
   $('#player-actions').classList.add('hidden');
   $('#player-confirm').classList.remove('hidden');
