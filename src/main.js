@@ -351,7 +351,53 @@ function makeCardTexture(player,index){
   } else ctx.fillText('ROAD TO THE KNOCKOUTS',210,560);
   ctx.textAlign='start';
   const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;texture.anisotropy=4;
+  loadPlayerPortrait(player,canvas,ctx,texture);
   return texture;
+}
+const portraitCache=new Map();
+function normalizePlayerName(value){
+  return String(value||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().replace(/[^a-z0-9 ]/g,' ').replace(/\\s+/g,' ').trim();
+}
+async function findPlayerPortrait(player){
+  const key=normalizePlayerName(player.name);
+  if(portraitCache.has(key))return portraitCache.get(key);
+  const task=(async()=>{
+    try{
+      const query=encodeURIComponent('filetype:bitmap "'+player.name+'" footballer');
+      const url='https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch='+query+'&gsrnamespace=6&gsrlimit=8&prop=imageinfo&iiprop=url&iiurlwidth=500&format=json&origin=*';
+      const response=await fetch(url,{mode:'cors'});
+      if(!response.ok)throw new Error('Commons image search failed');
+      const data=await response.json();
+      const pages=Object.values(data.query?.pages||{});
+      const tokens=key.split(' ').filter(Boolean);
+      const match=pages.find(page=>{
+        const title=normalizePlayerName(page.title.replace(/^file /,''));
+        return tokens.length>1&&tokens.every(token=>title.includes(token))&&page.imageinfo?.[0]?.thumburl;
+      });
+      return match?.imageinfo?.[0]?.thumburl||null;
+    }catch(error){return null;}
+  })();
+  portraitCache.set(key,task);
+  return task;
+}
+function loadPlayerPortrait(player,canvas,ctx,texture){
+  findPlayerPortrait(player).then(url=>{
+    if(!url)return;
+    const image=new Image();
+    image.crossOrigin='anonymous';
+    image.onload=()=>{
+      ctx.save();
+      ctx.beginPath();ctx.roundRect(62,154,296,294,18);ctx.clip();
+      const scale=Math.max(296/image.width,294/image.height);
+      const width=image.width*scale,height=image.height*scale;
+      ctx.drawImage(image,210-width/2,154+(294-height)/2,width,height);
+      ctx.restore();
+      ctx.strokeStyle='#e9cf78';ctx.lineWidth=3;ctx.strokeRect(62,154,296,294);
+      texture.needsUpdate=true;
+    };
+    image.onerror=()=>{};
+    image.src=url;
+  });
 }
 function render3DCardWall(container,players,featured=false){
   if(!container)return;
