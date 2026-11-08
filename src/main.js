@@ -39,7 +39,11 @@ function line(x1,z1,x2,z2,w=.13){
   m.position.set((x1+x2)/2,.035,(z1+z2)/2); m.rotation.y=Math.atan2(dx,dz); field.add(m);
 }
 line(-34,-52,34,-52);line(-34,52,34,52);line(-34,-52,-34,52);line(34,-52,34,52);
-line(-34,0,34,0); 
+line(-34,0,34,0);
+line(-20,-52,-20,-36);line(20,-52,20,-36);line(-20,-36,20,-36);
+line(-20,52,-20,36);line(20,52,20,36);line(-20,36,20,36);
+line(-9,-52,-9,-46);line(9,-52,9,-46);line(-9,-46,9,-46);
+line(-9,52,-9,46);line(9,52,9,46);line(-9,46,9,46); 
 const circle = new THREE.Mesh(new THREE.TorusGeometry(9.15,.12,8,80),lineMat);circle.rotation.x=Math.PI/2;circle.position.y=.05;field.add(circle);
 const spot = new THREE.Mesh(new THREE.CircleGeometry(.22,16),lineMat);spot.rotation.x=-Math.PI/2;spot.position.set(0,.06,0);field.add(spot);
 function box(parent,w,h,d,x,y,z,material){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m;}
@@ -51,6 +55,20 @@ function goal(z){
  return g;
 }
 goal(-51.7);goal(51.7);
+// Instanced crowd seating gives the stadium a populated, layered 3D feel.
+const crowdGeo=new THREE.SphereGeometry(.22,6,5);
+const crowdMats=[mat(0x78919b),mat(0x9a7770),mat(0xd2c7a1),mat(0x456e69),mat(0x343d54)];
+for(const side of [-1,1]){
+ const crowd=new THREE.InstancedMesh(crowdGeo,crowdMats[0],420);
+ const dummy=new THREE.Object3D();
+ for(let n=0;n<420;n++){
+  const row=Math.floor(n/70),col=n%70;
+  dummy.position.set(side*(35+row*1.0),6.4+row*.27,-49+col*1.42);
+  dummy.scale.set(.8,.8,.8);dummy.updateMatrix();crowd.setMatrixAt(n,dummy.matrix);
+  crowd.setColorAt(n,new THREE.Color([0x78919b,0x9a7770,0xd2c7a1,0x456e69,0x343d54][(n*7+row)%5]));
+ }
+ crowd.instanceMatrix.needsUpdate=true;scene.add(crowd);
+}
 // Low-profile stadium stands and floodlight towers
 const standMat=mat(0x34424a), seatMat=mat(0x66747a);
 for(const side of [-1,1]){
@@ -66,11 +84,19 @@ const ballMark=new THREE.Mesh(new THREE.SphereGeometry(.365,16,12),new THREE.Mes
 
 function makePlayer(team,x,z,height=1.8,stats={}){
  const group=new THREE.Group();scene.add(group);group.position.set(x,0,z);
- const shirt=mat(team==='white'?0xf3f2e9:0x171b20), shorts=mat(team==='white'?0xd7d8d1:0x090b0d), skin=mat(0xb9825c), socks=mat(team==='white'?0xffffff:0x20242a);
- const body= new THREE.Mesh(new THREE.CapsuleGeometry(.34*height/1.8,.62*height/1.8,5,10),shirt);body.position.y=height*.59;body.castShadow=true;group.add(body);
- const head=new THREE.Mesh(new THREE.SphereGeometry(.19*height/1.8,16,12),skin);head.position.y=height*.99;head.castShadow=true;group.add(head);
- const legGeo=new THREE.CapsuleGeometry(.105*height/1.8,.48*height/1.8,4,8);
- for(const s of [-1,1]){const leg=new THREE.Mesh(legGeo,shorts);leg.position.set(s*.16*height/1.8,height*.22,0);leg.castShadow=true;group.add(leg);const arm=new THREE.Mesh(new THREE.CapsuleGeometry(.09,.48,4,8),shirt);arm.position.set(s*.38,height*.62,0);arm.rotation.z=s*.18;group.add(arm);}
+ const shirt=mat(team==='white'?0xf3f2e9:0x171b20), shorts=mat(team==='white'?0x26313a:0x090b0d), skin=mat(0xb9825c), socks=mat(team==='white'?0xf7f7f2:0x252a30), boots=mat(0xd7d8d4,.45);
+ const torso=new THREE.Mesh(new THREE.CapsuleGeometry(.34*height/1.8,.62*height/1.8,7,14),shirt);torso.position.y=height*.59;torso.castShadow=true;group.add(torso);
+ const chestStripe=new THREE.Mesh(new THREE.BoxGeometry(.11,.72*height/1.8,.025),mat(team==='white'?0x9b2424:0x6bb9c8));chestStripe.position.set(0,height*.63,.335);group.add(chestStripe);
+ const shortsMesh=new THREE.Mesh(new THREE.BoxGeometry(.52,.28,.34),shorts);shortsMesh.position.y=height*.29;shortsMesh.castShadow=true;group.add(shortsMesh);
+ const head=new THREE.Mesh(new THREE.SphereGeometry(.19*height/1.8,20,16),skin);head.position.y=height*.99;head.castShadow=true;group.add(head);
+ const hair=new THREE.Mesh(new THREE.SphereGeometry(.195*height/1.8,16,10,0,Math.PI*2,0,Math.PI*.52),mat(0x201b18));hair.position.y=height*1.025;group.add(hair);
+ const legGeo=new THREE.CapsuleGeometry(.105*height/1.8,.43*height/1.8,5,10);
+ for(const s of [-1,1]){
+  const leg=new THREE.Mesh(legGeo,socks);leg.position.set(s*.16*height/1.8,height*.19,0);leg.castShadow=true;group.add(leg);
+  const boot=new THREE.Mesh(new THREE.BoxGeometry(.19,.12,.34),boots);boot.position.set(s*.16*height/1.8,.09,.09);boot.castShadow=true;group.add(boot);
+  const arm=new THREE.Mesh(new THREE.CapsuleGeometry(.09,.43,5,10),shirt);arm.position.set(s*.38,height*.62,0);arm.rotation.z=s*.18;arm.castShadow=true;group.add(arm);
+  const hand=new THREE.Mesh(new THREE.SphereGeometry(.085,10,8),skin);hand.position.set(s*.4,height*.36,.01);group.add(hand);
+ }
  const player={group,team,stats:{speed:stats.speed??7.2,strength:stats.strength??70,agility:stats.agility??70,stamina:stats.stamina??100,shoot:stats.shoot??70,pass:stats.pass??70},velocity:new THREE.Vector3(),height,hasBall:false};
  players.push(player);return player;
 }
@@ -112,10 +138,16 @@ addEventListener('keydown',e=>{if(e.repeat)return;if(e.key.toLowerCase()==='j')p
 document.querySelector('[data-action="pass"]').addEventListener('pointerdown',e=>{e.preventDefault();passBall();});
 document.querySelector('[data-action="shoot"]').addEventListener('pointerdown',e=>{e.preventDefault();shootBall();});
 document.querySelector('[data-action="through"]').addEventListener('pointerdown',e=>{e.preventDefault();throughBall();});
-document.querySelector('[data-action="tackle"]').addEventListener('pointerdown',e=>{e.preventDefault();tackle();});
-const sprintButton=document.querySelector('[data-action="sprint"]');
-sprintButton.addEventListener('pointerdown',e=>{e.preventDefault();sprinting=true;sprintButton.classList.add('pressed');});
-['pointerup','pointerleave','pointercancel'].forEach(ev=>sprintButton.addEventListener(ev,()=>{sprinting=false;sprintButton.classList.remove('pressed');}));
+const sprintTackleButton=document.querySelector('[data-action="sprint-tackle"]');
+let sprintTacklePointer=null;
+sprintTackleButton.addEventListener('pointerdown',e=>{
+ e.preventDefault();sprintTacklePointer=e.pointerId;
+ const nearestOpponent=black.reduce((best,p)=>!best||p.group.position.distanceTo(controlled.group.position)<best.group.position.distanceTo(controlled.group.position)?p:best,null);
+ if(nearestOpponent && nearestOpponent.group.position.distanceTo(controlled.group.position)<2.7){tackle();sprinting=false;}
+ else {sprinting=true;sprintTackleButton.classList.add('pressed');}
+});
+function releaseSprintTackle(e){if(e.pointerId!==sprintTacklePointer)return;sprintTacklePointer=null;sprinting=false;sprintTackleButton.classList.remove('pressed');}
+['pointerup','pointerleave','pointercancel','lostpointercapture'].forEach(ev=>sprintTackleButton.addEventListener(ev,releaseSprintTackle));
 const stick=document.querySelector('#virtual-stick'),knob=document.querySelector('#stick-knob');
 let stickPointer=null;
 function updateStick(e){
