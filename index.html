@@ -64,22 +64,23 @@
 
     <main id="main-content" class="main-content">
       <section class="page active" data-page="home">
-        <div class="fc-home-heading"><div class="fc-brand"><span class="fc-shield">FUT</span><b>Main</b></div><div class="fc-home-status"><span>🪙 8K</span><span>💎 25</span><span>SP 3K/2K</span></div></div>
+        <div class="fc-home-heading"><div class="fc-brand"><span class="fc-shield">UT</span><b>ULTIMATE TEAM</b></div><div class="fc-home-status"><span>🪙 <b id="coin-count">5,436</b></span><span>💎 0</span><span>FC POINTS 0</span></div></div>
         <div class="fc-home-grid">
-          <button class="fc-season-hero" data-open-tab="objectives">
-            <div class="fc-hero-copy"><span class="event-tag">ULTIMATE TEAM • SEASON 1</span><h1>الموسم 1: اللاعبون المتألقون</h1><p>انطلق إلى موسم جديد مع مكافآت اللاعبين المتألقين، واكتشف البطاقات والعناصر الحصرية والتحديات الجديدة.</p></div>
-            <div class="fc-card-showcase"><div class="fc-player-card"><b>83</b><span>CB</span><strong>DIOMANDÉ</strong></div><div class="fc-player-card second"><b>81</b><span>LW</span><strong>SUMMERVILLE</strong></div><div class="fc-pack-art">UT<br>27</div><div class="fc-green-card">✧</div></div>
-            <span class="fc-hero-hint">△  ●  •</span>
-          </button>
-          <button class="fc-side-panel" data-open-tab="store"><span class="fc-large-shield">FUT</span><small>المتجر والمكافآت</small></button>
+          <section class="fc-season-hero">
+            <div class="fc-hero-copy"><span class="event-tag">UEFA • LIVE EVENT</span><h1>Road to the Knockouts</h1><p>كروت الحدث الحالي</p></div>
+            <div id="event-card-grid" class="event-card-grid" aria-label="بطاقات حدث Road to the Knockouts"></div>
+          </section>
+          <aside class="fc-side-panel">
+            <div class="featured-label">FEATURED PLAYERS</div>
+            <div id="featured-card-grid" class="featured-card-grid" aria-label="أبرز أربع بطاقات"></div>
+          </aside>
         </div>
-        <div class="fc-home-footer"><button class="primary-btn" data-open-tab="play">ادخل إلى أنماط اللعب　✕</button><span>رجوع　◉</span></div>
-        <div class="fc-shortcuts"><button data-open-tab="play">اللعب</button><button data-open-tab="squad">النادي</button><button data-open-tab="sbc">SBC</button><button data-open-tab="transfers">الانتقالات</button><button data-open-tab="store">المتجر</button></div>
+        <div class="fc-home-footer"><button class="primary-btn" data-open-tab="play">اللعب　✕</button><button class="secondary-btn" data-open-tab="squad">النادي</button></div>
       </section>
 
       <section class="page" data-page="play">
         <div class="page-heading"><div><p class="eyebrow">ULTIMATE TEAM</p><h1>اللعب</h1><p class="muted">اختر نمط المباراة</p></div><span class="mode-count">3 أنماط</span></div>
-        <div class="sub-tabs"><button class="selected">الأنماط الأساسية</button><button>الأحداث المباشرة</button><button>المفضلة</button></div>
+        <div class="sub-tabs"><button class="selected">الأنماط الأساسية</button></div>
         <div class="mode-list">
           <article class="mode-card squad-battles"><div class="mode-art">⚔</div><div class="mode-info"><span class="event-tag">OFFLINE • VS AI</span><h2>Squad Battles</h2><p>واجه تشكيلات المنافسين ضد الذكاء الاصطناعي، واجمع النقاط لتحصل على المكافآت الأسبوعية.</p><div class="mode-meta"><span>7 مستويات صعوبة</span><span>مكافآت أسبوعية</span></div><button id="open-squad-battles" class="primary-btn">العب الآن　›</button></div></article>
           <article class="mode-card rivals-mode"><div class="mode-art">🏆</div><div class="mode-info"><span class="event-tag">ONLINE</span><h2>Division Rivals</h2><p>نافس لاعبين آخرين وارتقِ في الدرجات.</p><span class="coming-soon">قريبًا</span></div></article>
@@ -109,6 +110,8 @@
   <aside id="quick-menu" class="quick-menu hidden"><div class="quick-head"><b>القائمة السريعة</b><button id="close-quick" class="icon-btn">✕</button></div><div class="quick-items">
     <button data-tab="home">⌂ <span>الرئيسية</span><small>العودة إلى النادي</small></button><button data-tab="play">⚽ <span>اللعب</span><small>Squad Battles والأنماط</small></button><button data-tab="objectives">◎ <span>الأهداف</span><small>المهام والمكافآت</small></button><button data-tab="squad">♟ <span>التشكيلة</span><small>إدارة اللاعبين</small></button><button data-tab="sbc">✦ <span>SBC</span><small>تحديات بناء التشكيلات</small></button><button data-tab="transfers">⇄ <span>الانتقالات</span><small>سوق اللاعبين</small></button><button data-tab="store">🛒 <span>المتجر</span><small>الباكات</small></button><button data-tab="settings">⚙ <span>الإعدادات</span><small>الجرافيك واللغة</small></button>
   </div><p class="quick-hint">L2 فتح وإغلاق • ↑ ↓ للتنقل • X اختيار • O رجوع</p></aside>
+
+  <div id="player-modal" class="modal hidden"><div class="modal-card player-modal-card"><button class="modal-close" data-close-player>✕</button><p class="eyebrow">PLAYER ITEM</p><div id="player-modal-art" class="player-modal-art"></div><h2 id="player-modal-title">لاعب الحدث</h2><p class="player-prompt">اضغط X لعرض خيارات اللاعب</p><div id="player-actions" class="player-actions hidden"><button data-player-action="styles">الأنماط الأساسية</button><button data-player-action="squad">إضافة للتشكيلة</button><button data-player-action="sbc">استخدام في SBC</button><button data-player-action="back">رجوع</button></div><button id="player-confirm" class="primary-btn wide-btn">✕ اختيار</button></div></div>
 
   <div id="pack-modal" class="modal hidden"><div class="modal-card"><button class="modal-close" data-close-modal>✕</button><p class="eyebrow">PACK OPENING</p><div class="pack-reveal">UT<span>27</span></div><h2 id="pack-title">باك Gold</h2><p id="pack-message">تم فتح الباك بنجاح!</p><div class="reveal-player"><b>لاعب Gold</b><strong>80+</strong><small>عنصر تجريبي للعرض فقط</small></div><button class="primary-btn wide-btn" data-close-modal>متابعة</button></div></div>
 
