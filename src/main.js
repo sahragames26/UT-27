@@ -362,7 +362,7 @@ function renderBench(){
   });
 }
 function renderSquad(){
-  $('#squad-pitch [data-slot]').forEach(btn=>{
+  $$( '#squad-pitch [data-slot]' ).forEach(btn=>{
     const player=eventPlayers.find(p=>p.name===squadAssignments[btn.dataset.slot]);
     btn.classList.toggle('selected',!!player);
     btn.innerHTML=player?'<b>'+player.rating+'</b><small>'+player.name.split(' ').slice(-1)[0]+'</small>':btn.dataset.slot;
@@ -380,7 +380,7 @@ function openSquadPicker(slot){
   if(!list.children.length)list.innerHTML='<span class="bench-empty">لا يوجد لاعب مناسب لهذا المركز ضمن لاعبي الحدث.</span>';
   $('#squad-picker').classList.remove('hidden');
 }
-$('#squad-pitch [data-slot]').forEach(btn=>btn.addEventListener('click',()=>openSquadPicker(btn.dataset.slot)));
+$$( '#squad-pitch [data-slot]' ).forEach(btn=>btn.addEventListener('click',()=>openSquadPicker(btn.dataset.slot)));
 $('#close-squad-picker').addEventListener('click',()=>$('#squad-picker').classList.add('hidden'));
 $('#toggle-bench').addEventListener('click',()=>benchPanel.classList.toggle('collapsed'));
 renderSquad();
@@ -400,7 +400,7 @@ $$('[data-player-action]').forEach(btn=>btn.addEventListener('click',()=>{
     $('#player-actions').querySelector('[data-player-back]').addEventListener('click',()=>{
       $('#player-modal-title').textContent=selectedPlayer?.player.name||'لاعب الحدث';
       $('#player-actions').innerHTML='<button data-player-action="styles">الأنماط الأساسية</button><button data-player-action="squad">إضافة للتشكيلة</button><button data-player-action="sbc">استخدام في SBC</button><button data-player-action="back">رجوع</button>';
-      $('#player-actions [data-player-action]').forEach(b=>b.addEventListener('click',()=>{const a=b.dataset.playerAction;if(a==='back')closePlayerModal();else if(a==='squad'||a==='sbc'){closePlayerModal();switchTab(a);}else $('#player-modal-title').textContent='الأنماط الأساسية';}));
+      $$( '#player-actions [data-player-action]' ).forEach(b=>b.addEventListener('click',()=>{const a=b.dataset.playerAction;if(a==='back')closePlayerModal();else if(a==='squad'||a==='sbc'){closePlayerModal();switchTab(a);}else $('#player-modal-title').textContent='الأنماط الأساسية';}));
     });
   }
 }));
@@ -432,11 +432,11 @@ function moveQuick(delta) {
 function chooseQuick() { if (!quickMenu.classList.contains('hidden')) activeQuickItems[quickIndex]?.click(); }
 $('#close-quick').addEventListener('click', closeQuick);
 $('#quick-menu-toggle').addEventListener('click', () => quickMenu.classList.contains('hidden') ? openQuick() : closeQuick());
-$('.quick-items button').forEach(btn => btn.addEventListener('click', () => switchTab(btn.dataset.tab)));
+$$( '.quick-items button' ).forEach(btn => btn.addEventListener('click', () => switchTab(btn.dataset.tab)));
 $$('[data-sbc-tab]').forEach(btn => btn.addEventListener('click', () => {
   $$('[data-sbc-tab]').forEach(x => x.classList.toggle('selected', x === btn));
   const mode = btn.dataset.sbcTab;
-  $('#sbc-challenge-grid .challenge-card').forEach(card => {
+  $$( '#sbc-challenge-grid .challenge-card' ).forEach(card => {
     const tag = card.querySelector('.event-tag')?.textContent.trim().toLowerCase() || '';
     card.classList.toggle('hidden', mode === 'upgrades' ? !tag.includes('upgrade') : mode === 'challenges' ? tag.includes('upgrade') : false);
   });
@@ -446,8 +446,8 @@ $('#open-squad-battles').addEventListener('click', () => {
   difficultyPanel.classList.remove('hidden');
   difficultyPanel.scrollIntoView({behavior:'smooth', block:'nearest'});
 });
-$('[data-close-panel]').forEach(btn => btn.addEventListener('click', () => difficultyPanel.classList.add('hidden')));
-$('[data-difficulty]').forEach(btn => btn.addEventListener('click', () => {
+$$( '[data-close-panel]' ).forEach(btn => btn.addEventListener('click', () => difficultyPanel.classList.add('hidden')));
+$$( '[data-difficulty]' ).forEach(btn => btn.addEventListener('click', () => {
   $$('.difficulty-grid button').forEach(x => x.classList.remove('chosen'));
   btn.classList.add('chosen');
   selectedDifficulty = btn.dataset.difficulty;
@@ -485,7 +485,7 @@ function showPackModal(name, price) {
   $('#pack-modal').classList.remove('hidden');
 }
 $$('.pack-open').forEach(btn => btn.addEventListener('click', () => showPackModal(btn.dataset.pack, Number(btn.dataset.price))));
-$('[data-close-modal]').forEach(btn => btn.addEventListener('click', () => $('#pack-modal').classList.add('hidden')));
+$$( '[data-close-modal]' ).forEach(btn => btn.addEventListener('click', () => $('#pack-modal').classList.add('hidden')));
 $('#search-player').addEventListener('click', () => {
   const q = $('#player-search').value.trim();
   $('#market-results').innerHTML = q
