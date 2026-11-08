@@ -454,7 +454,30 @@ function chooseQuick() { if (!quickMenu.classList.contains('hidden')) activeQuic
 $('#close-quick').addEventListener('click', closeQuick);
 $('#quick-menu-toggle').addEventListener('click', () => quickMenu.classList.contains('hidden') ? openQuick() : closeQuick());
 $$( '.quick-items button' ).forEach(btn => btn.addEventListener('click', () => switchTab(btn.dataset.tab)));
-$$('[data-sbc-tab]').forEach(btn => btn.addEventListener('click', () => {
+let activeSbcChallenge='';
+let selectedSbcPlayers=[];
+function openSbcChallenge(card){
+ activeSbcChallenge=card.querySelector('h3')?.textContent||'SBC Challenge';selectedSbcPlayers=[];
+ $('#sbc-active-title').textContent=activeSbcChallenge;
+ $('#sbc-result').textContent='';
+ const pool=$('#sbc-player-pool');pool.replaceChildren();
+ if(clubPlayers.length<3){$('#sbc-result').textContent='تحتاج إلى 3 لاعبين على الأقل في النادي لإكمال التحدي.';$('#sbc-submit').disabled=true;$('#sbc-submit-panel').classList.remove('hidden');return;}
+ clubPlayers.forEach((p,index)=>{const b=document.createElement('button');b.type='button';b.className='sbc-player-option';b.innerHTML='<b>'+p.rating+'</b><small>'+p.position+'</small><strong>'+p.name+'</strong>';b.addEventListener('click',()=>{if(selectedSbcPlayers.includes(index)){selectedSbcPlayers=selectedSbcPlayers.filter(x=>x!==index);b.classList.remove('selected');}else if(selectedSbcPlayers.length<3){selectedSbcPlayers.push(index);b.classList.add('selected');}$('#sbc-select-count').textContent='اختر 3 لاعبين من النادي ('+selectedSbcPlayers.length+'/3)';$('#sbc-submit').disabled=selectedSbcPlayers.length!==3;});pool.appendChild(b);});
+ $('#sbc-select-count').textContent='اختر 3 لاعبين من النادي (0/3)';$('#sbc-submit').disabled=true;$('#sbc-submit-panel').classList.remove('hidden');
+}
+$('#sbc-challenge-grid .challenge-card').forEach(card=>{card.tabIndex=0;card.addEventListener('click',()=>openSbcChallenge(card));card.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openSbcChallenge(card);}});});
+$('#sbc-cancel').addEventListener('click',()=>$('#sbc-submit-panel').classList.add('hidden'));
+$('#sbc-submit').addEventListener('click',()=>{
+ if(selectedSbcPlayers.length!==3)return;
+ const consumed=selectedSbcPlayers.map(i=>clubPlayers[i]);
+ const indexes=[...selectedSbcPlayers].sort((a,b)=>b-a);indexes.forEach(i=>clubPlayers.splice(i,1));
+ const rewardSource=eventPlayers[Math.floor(Math.random()*eventPlayers.length)];
+ const reward={...rewardSource,id:'sbc-reward-'+Date.now(),tier:'SBC Reward'};
+ clubPlayers.push(reward);saveClub();renderSquad();
+ $('#sbc-result').textContent='تم تسليم 3 لاعبين وإضافة '+reward.name+' ('+reward.rating+') إلى النادي.';
+ $('#sbc-player-pool').replaceChildren();$('#sbc-select-count').textContent='اكتمل التحدي';$('#sbc-submit').disabled=true;selectedSbcPlayers=[];
+});
+$('[data-sbc-tab]').forEach(btn => btn.addEventListener('click', () => {
   $$('[data-sbc-tab]').forEach(x => x.classList.toggle('selected', x === btn));
   const mode = btn.dataset.sbcTab;
   $$( '#sbc-challenge-grid .challenge-card' ).forEach(card => {
