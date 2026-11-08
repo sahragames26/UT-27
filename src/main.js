@@ -249,29 +249,12 @@ function openApp() {
   switchTab('home');
 }
 const savedLanguage = localStorage.getItem('ut27-language');
-if (savedLanguage) {
-  setLanguage(savedLanguage);
-  if (localStorage.getItem('ut27-starter-done') === 'yes') openApp();
-  else showScreen(starterScreen);
-} else showScreen(languageScreen);
-
+if (savedLanguage) { setLanguage(savedLanguage); openApp(); }
+else showScreen(languageScreen);
 $$('[data-language]').forEach(btn => btn.addEventListener('click', () => {
   setLanguage(btn.dataset.language);
-  if (localStorage.getItem('ut27-starter-done') === 'yes') openApp();
-  else showScreen(starterScreen);
-}));
-
-$$('.league-choice').forEach(btn => btn.addEventListener('click', () => {
-  $$('.league-choice').forEach(x => x.classList.remove('chosen'));
-  btn.classList.add('chosen');
-  $('#starter-result').textContent = `تم اختيار ${btn.dataset.league} — باك البداية جاهز للفتح`;
-  $('#starter-continue').classList.remove('hidden');
-}));
-$('#starter-continue').addEventListener('click', () => {
-  localStorage.setItem('ut27-starter-done', 'yes');
   openApp();
-  showPackModal('Starter Pack', 0, 'starter');
-});
+}));
 
 
 const eventPlayers = [
@@ -306,13 +289,62 @@ const eventPlayers = [
   {name:"Lamine Camara",rating:85,position:"CM",club:"Monaco",competition:"UECL",stats:[84,74,86,84,81,80]},
   {name:"Timothy Weah",rating:85,position:"RM",club:"Marseille",competition:"UEL",stats:[92,82,81,83,81,78]}
 ];
-let clubPlayers=(()=>{try{return JSON.parse(localStorage.getItem('ut27-club')||'[]')}catch{return []}})();
+let clubPlayers=(()=>{try{return JSON.parse(localStorage.getItem('ut27-club')||'[]').filter(p=>p.club!=='UT Academy'&&!String(p.id||'').startsWith('starter-'))}catch{return []}})();
 function saveClub(){localStorage.setItem('ut27-club',JSON.stringify(clubPlayers));}
-const starterNames=['Adam Wilson','Luca Moretti','Noah Fischer','Omar Hassan','Leo Martin','Ethan Brooks','Youssef Ali','Mateo Silva','Daniel Costa','Samir Nabil','Ben Carter','Karim Adel','Milan Novak','Alex Turner','Hugo Perez','Rami Saleh','Theo Laurent','Ibrahim Said','Nico Weber','Amir Farouk','Ryan Cole','Tariq Mansour','Felix Braun','Ziad Mostafa','Lucas Reed','Marek Zielinski','Khaled Amin','Joao Mendes','Moussa Diallo','Tomáš Kral'];
-const starterPositions=['GK','LB','CB','CB','RB','CDM','CM','CAM','LW','ST','RW','GK','CB','CB','LB','RB','CM','CDM','CM','ST','LW','RW','CB','CM','LB','RB','CAM','ST','CDM','CB'];
-function makeStarterClub(){return starterNames.map((name,i)=>{const rating=i===0?80:60+((i*7+3)%15);return{id:'starter-'+Date.now()+'-'+i,name,rating,position:starterPositions[i],club:'UT Academy',competition:'Starter',tier:i===0?'Gold':rating<65?'Bronze':'Silver',stats:[65+i%25,58+i%28,61+i%27,60+i%30,55+i%32,58+i%29]};});}
-function makePackPlayers(name,count){const pool=name.toLowerCase().includes('rttk')?eventPlayers:eventPlayers.filter(p=>p.rating>=85);return Array.from({length:count},(_,i)=>{const p=pool[Math.floor(Math.random()*pool.length)];return{...p,id:'pack-'+Date.now()+'-'+i+'-'+Math.random().toString(36).slice(2),tier:p.rating>=80?'Gold':'Silver'};});}
-function renderClubCollection(){const list=$('#club-collection-list');if(!list)return;list.replaceChildren();$('#club-player-count').textContent=clubPlayers.length;clubPlayers.forEach(p=>{const b=document.createElement('button');b.className='club-card';b.type='button';b.innerHTML='<b>'+p.rating+'</b><small>'+p.position+'</small><strong>'+p.name+'</strong><em>'+p.tier+'</em>';b.addEventListener('click',()=>openSquadPicker(p.position));list.appendChild(b);});}
+const leaguePlayerPools={
+ 'Premier League':[
+  {name:'Erling Haaland',rating:91,position:'ST',club:'Manchester City',nation:'Norway',stats:[87,92,71,80,47,89],image:'https://assets.fodder.gg/renders/239085.webp'},
+  {name:'Bruno Fernandes',rating:89,position:'CAM',club:'Manchester United',nation:'Portugal',stats:[67,85,92,85,68,75],image:'https://assets.fodder.gg/renders/212198.webp'},
+  {name:'Gabriel',rating:89,position:'CB',club:'Arsenal',nation:'Brazil',stats:[64,44,64,66,91,84],image:'https://assets.fodder.gg/renders/232580.webp'},
+  {name:'William Saliba',rating:88,position:'CB',club:'Arsenal',nation:'France',stats:[77,41,68,73,90,82],image:'https://assets.fodder.gg/renders/243715.webp'},
+  {name:'Bukayo Saka',rating:87,position:'RW',club:'Arsenal',nation:'England',stats:[79,82,85,87,60,73],image:'https://assets.fodder.gg/renders/246669.webp'},
+  {name:'Declan Rice',rating:88,position:'CDM',club:'Arsenal',nation:'England',stats:[72,75,86,81,85,84],image:'https://assets.fodder.gg/renders/234378.webp'}
+ ],
+ 'LaLiga':[
+  {name:'Kylian Mbappé',rating:91,position:'ST',club:'Real Madrid',nation:'France',stats:[96,91,80,92,29,76],image:'https://assets.fodder.gg/renders/231747.webp'},
+  {name:'Lamine Yamal',rating:90,position:'RW',club:'FC Barcelona',nation:'Spain',stats:[86,84,87,93,38,61],image:'https://card-image.futmind.com/en/27/277643.png'},
+  {name:'Jude Bellingham',rating:90,position:'CAM',club:'Real Madrid',nation:'England',stats:[79,86,83,88,79,85],image:'https://assets.fodder.gg/renders/252371.webp'},
+  {name:'Pedri',rating:90,position:'CM',club:'FC Barcelona',nation:'Spain',stats:[76,75,89,91,77,75],image:'https://assets.fodder.gg/renders/251854.webp'},
+  {name:'Vini Jr.',rating:89,position:'LW',club:'Real Madrid',nation:'Brazil',stats:[93,85,80,91,31,71],image:'https://assets.fodder.gg/renders/238794.webp'},
+  {name:'Thibaut Courtois',rating:90,position:'GK',club:'Real Madrid',nation:'Belgium',stats:[87,89,78,90,46,90],image:'https://assets.fodder.gg/renders/192119.webp'}
+ ],
+ 'Bundesliga':[
+  {name:'Harry Kane',rating:90,position:'ST',club:'FC Bayern München',nation:'England',stats:[62,94,83,82,49,83],image:'https://assets.fodder.gg/renders/202126.webp'},
+  {name:'Michael Olise',rating:90,position:'RM',club:'FC Bayern München',nation:'France',stats:[83,82,89,91,47,69],image:'https://assets.fodder.gg/renders/247827.webp'},
+  {name:'Joshua Kimmich',rating:88,position:'CDM',club:'FC Bayern München',nation:'Germany',stats:[71,73,90,84,81,79],image:'https://assets.fodder.gg/renders/212622.webp'},
+  {name:'Jamal Musiala',rating:87,position:'CAM',club:'FC Bayern München',nation:'Germany',stats:[79,81,79,90,62,65],image:'https://assets.fodder.gg/renders/256790.webp'},
+  {name:'Nico Schlotterbeck',rating:87,position:'CB',club:'Borussia Dortmund',nation:'Germany',stats:[81,60,76,74,86,84],image:'https://assets.fodder.gg/renders/247819.webp'},
+  {name:'Luis Díaz',rating:88,position:'LM',club:'FC Bayern München',nation:'Colombia',stats:[82,82,83,87,44,74],image:'https://assets.fodder.gg/renders/241084.webp'}
+ ],
+ 'Serie A':[
+  {name:'Alessandro Bastoni',rating:86,position:'CB',club:'Lombardia FC',nation:'Italy',stats:[74,47,76,78,86,82],image:'https://assets.fodder.gg/renders/237383.webp'},
+  {name:'Mike Maignan',rating:87,position:'GK',club:'Milano FC',nation:'France',stats:[83,86,81,89,62,84],image:'https://assets.fodder.gg/renders/215698.webp'},
+  {name:'Nicolò Barella',rating:87,position:'CM',club:'Lombardia FC',nation:'Italy',stats:[77,78,84,86,81,72],image:'https://assets.fodder.gg/renders/224232.webp'},
+  {name:'Lautaro Martínez',rating:87,position:'ST',club:'Lombardia FC',nation:'Argentina',stats:[80,88,76,85,51,74],image:'https://assets.fodder.gg/renders/231478.webp'},
+  {name:'Federico Dimarco',rating:86,position:'LB',club:'Lombardia FC',nation:'Italy',stats:[81,78,85,81,80,74],image:'https://assets.fodder.gg/renders/226268.webp'},
+  {name:'Rafael Leão',rating:83,position:'LW',club:'Milano FC',nation:'Portugal',stats:[93,79,79,83,30,73],image:'https://assets.fodder.gg/renders/241721.webp'}
+ ],
+ 'Ligue 1':[
+  {name:'Ousmane Dembélé',rating:90,position:'ST',club:'Paris SG',nation:'France',stats:[90,89,83,93,55,70],image:'https://assets.fodder.gg/renders/231443.webp'},
+  {name:'Vitinha',rating:90,position:'CM',club:'Paris SG',nation:'Portugal',stats:[72,81,88,91,75,70],image:'https://assets.fodder.gg/renders/255253.webp'},
+  {name:'Achraf Hakimi',rating:88,position:'RB',club:'Paris SG',nation:'Morocco',stats:[92,79,81,82,82,81],image:'https://assets.fodder.gg/renders/235212.webp'},
+  {name:'Nuno Mendes',rating:89,position:'LB',club:'Paris SG',nation:'Portugal',stats:[94,77,80,86,84,80],image:'https://assets.fodder.gg/renders/252145.webp'},
+  {name:'Willian Pacho',rating:89,position:'CB',club:'Paris SG',nation:'Ecuador',stats:[80,34,63,65,90,86],image:'https://assets.fodder.gg/renders/256196.webp'},
+  {name:'Khvicha Kvaratskhelia',rating:89,position:'LW',club:'Paris SG',nation:'Georgia',stats:[86,85,84,90,59,81],image:'https://assets.fodder.gg/renders/247635.webp'}
+ ]
+};
+function makePackPlayers(league){
+ const pool=(leaguePlayerPools[league]||[]).slice();
+ for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]];}
+ return pool.slice(0,5).map((p,i)=>({...p,id:'pack-'+Date.now()+'-'+i+'-'+Math.random().toString(36).slice(2),tier:'Gold',league}));
+}
+function renderClubCollection(){
+ const list=$('#club-collection-list');if(!list)return;list.replaceChildren();$('#club-player-count').textContent=clubPlayers.length;
+ clubPlayers.forEach((p,index)=>{const b=document.createElement('button');b.className='club-card';b.type='button';b.setAttribute('aria-label',p.name+' '+p.rating);
+ const img=document.createElement('img');img.src=p.image||'';img.alt=p.name;img.loading='lazy';img.onerror=()=>{img.remove();b.classList.add('club-card-fallback');};
+ const meta=document.createElement('span');meta.innerHTML='<b>'+p.rating+'</b><small>'+p.position+'</small><strong>'+p.name+'</strong>';
+ b.append(img,meta);b.addEventListener('click',()=>openSquadPicker(p.position));list.appendChild(b);});
+}
 const statLabels = ["PAC","SHO","PAS","DRI","DEF","PHY"];
 const keeperStatLabels = ["DIV","HAN","KIC","REF","SPD","POS"];
 function labelsForPlayer(player){return player.position==='GK'?keeperStatLabels:statLabels;}
@@ -371,7 +403,7 @@ function renderBench(){
   list.replaceChildren();
   bench.slice(0,12).forEach(p=>{
     const b=document.createElement('button');b.className='bench-player';b.type='button';
-    b.innerHTML='<b>'+p.rating+'</b><br>'+p.position+'<br>'+p.name.split(' ').slice(-1)[0];
+    b.innerHTML=(p.image?'<img src="'+p.image+'" alt="" loading="lazy">':'')+'<span><b>'+p.rating+'</b><br>'+p.position+'<br>'+p.name.split(' ').slice(-1)[0]+'</span>'; 
     b.addEventListener('click',()=>{const preferred=activeSquadSlot;const choices=p.position==='GK'?['GK']:['LB','CB1','CB2','RB','CM1','CM2','CM3','LW','ST','RW'];const slot=preferred&&!squadAssignments[preferred]?preferred:choices.find(s=>!squadAssignments[s]&&(s===p.position||(s.startsWith('CB')&&p.position==='CB')||(s.startsWith('CM')&&['CM','CDM','CAM'].includes(p.position))||(s==='LW'&&['LW','LM'].includes(p.position))||(s==='RW'&&['RW','RM'].includes(p.position))||(s==='ST'&&['ST','CF'].includes(p.position))||(s==='LB'&&['LB','LWB'].includes(p.position))||(s==='RB'&&['RB','RWB'].includes(p.position))));if(slot){squadAssignments[slot]=p.name;localStorage.setItem('ut27-squad',JSON.stringify(squadAssignments));activeSquadSlot='';renderSquad();}else openSquadPicker(p.position);});
     list.appendChild(b);
   });
@@ -380,7 +412,7 @@ function renderSquad(){
   $$( '#squad-pitch [data-slot]' ).forEach(btn=>{
     const player=clubPlayers.find(p=>p.name===squadAssignments[btn.dataset.slot]);
     btn.classList.toggle('selected',!!player);
-    btn.innerHTML=player?'<b>'+player.rating+'</b><small>'+player.name.split(' ').slice(-1)[0]+'</small>':btn.dataset.slot;
+    btn.innerHTML=player?(player.image?'<img class="squad-player-photo" src="'+player.image+'" alt="'+player.name+'"><span><b>'+player.rating+'</b><small>'+player.name.split(' ').slice(-1)[0]+'</small></span>':'<b>'+player.rating+'</b><small>'+player.name.split(' ').slice(-1)[0]+'</small>'):btn.dataset.slot;
   });
   renderBench();
   renderClubCollection();
@@ -393,7 +425,7 @@ function openSquadPicker(slot){
   $('#squad-picker-title').textContent='اختيار لاعب لمركز '+slot;
   const list=$('#squad-picker-list');list.replaceChildren();
   clubPlayers.filter(p=>(!Object.values(squadAssignments).includes(p.name)||squadAssignments[slot]===p.name) && (p.position===slot || (slot.startsWith('CB')&&p.position==='CB') || (slot.startsWith('CM')&&['CM','CDM','CAM'].includes(p.position)) || (slot==='LW'&&['LW','LM'].includes(p.position)) || (slot==='RW'&&['RW','RM'].includes(p.position)) || (slot==='LB'&&['LB','LWB'].includes(p.position)) || (slot==='RB'&&['RB','RWB'].includes(p.position)) || (slot==='ST'&&['ST','CF'].includes(p.position)) || (slot==='GK'&&p.position==='GK'))).forEach(p=>{
-    const b=document.createElement('button');b.type='button';b.innerHTML='<b>'+p.rating+' OVR</b><br>'+p.name+'<br>'+p.position;
+    const b=document.createElement('button');b.type='button';b.className='squad-pick-card';b.innerHTML=(p.image?'<img src="'+p.image+'" alt="" loading="lazy">':'')+'<span><b>'+p.rating+' OVR</b><br>'+p.name+'<br>'+p.position+'</span>';
     b.addEventListener('click',()=>{squadAssignments[slot]=p.name;localStorage.setItem('ut27-squad',JSON.stringify(squadAssignments));activeSquadSlot='';$('#squad-picker').classList.add('hidden');renderSquad();});list.appendChild(b);
   });
   if(!list.children.length)list.innerHTML='<span class="bench-empty">لا يوجد لاعب مناسب لهذا المركز في النادي.</span>';
@@ -403,7 +435,7 @@ $$( '#squad-pitch [data-slot]' ).forEach(btn=>btn.addEventListener('click',()=>o
 $('#close-squad-picker').addEventListener('click',()=>$('#squad-picker').classList.add('hidden'));
 $('#toggle-bench').addEventListener('click',()=>benchPanel.classList.toggle('collapsed'));
 renderSquad();
-if(localStorage.getItem('ut27-starter-done')==='yes'&&!localStorage.getItem('ut27-starter-claimed')&&clubPlayers.length===0)showPackModal('Starter Pack',0,'starter');
+
 
 $('#player-confirm').addEventListener('click',()=>{
   $('#player-actions').classList.remove('hidden');
@@ -519,20 +551,29 @@ function leaveMatch() {
 $('#leave-match').addEventListener('click', leaveMatch);
 $('#coin-count').textContent=coins.toLocaleString('en-US');$('#store-coins').textContent=coins.toLocaleString('en-US');
 
-function showPackModal(name,price,kind='standard'){
- const reveal=$('#pack-reveal-list');
- if(price>coins){$('#pack-title').textContent=name;$('#pack-message').textContent='رصيدك من الكوينز غير كافٍ.';reveal.innerHTML='';}
+const leaguePackInfo={
+ 'Premier League':{title:'Premier League Gold Pack',flag:'🏴',price:1000},
+ 'LaLiga':{title:'LaLiga Gold Pack',flag:'🇪🇸',price:1000},
+ 'Bundesliga':{title:'Bundesliga Gold Pack',flag:'🇩🇪',price:1000},
+ 'Serie A':{title:'Serie A Gold Pack',flag:'🇮🇹',price:1000},
+ 'Ligue 1':{title:'Ligue 1 Gold Pack',flag:'🇫🇷',price:1000}
+};
+function showPackModal(name,price,league){
+ const reveal=$('#pack-reveal-list');reveal.replaceChildren();
+ if(price>coins){$('#pack-title').textContent=name;$('#pack-message').textContent='رصيدك من الكوينز غير كافٍ لفتح الباك.';}
  else{
   coins-=price;localStorage.setItem('ut27-coins',String(coins));$('#coin-count').textContent=coins.toLocaleString('en-US');$('#store-coins').textContent=coins.toLocaleString('en-US');
-  const items=kind==='starter'&&!localStorage.getItem('ut27-starter-claimed')?(localStorage.setItem('ut27-starter-claimed','yes'),makeStarterClub()):makePackPlayers(name,name.toLowerCase().includes('rttk')?5:12);
-  clubPlayers.push(...items);saveClub();renderSquad();$('#pack-title').textContent=name;$('#pack-message').textContent='تمت إضافة '+items.length+' لاعب إلى ناديك. اختارهم من التشكيلة.';
-  reveal.innerHTML=items.map(p=>'<div class="pack-reveal-player"><b>'+p.rating+'</b><small>'+p.position+'</small><strong>'+p.name+'</strong><em>'+p.tier+'</em></div>').join('');
+  const items=makePackPlayers(league);clubPlayers.push(...items);saveClub();renderSquad();
+  $('#pack-title').textContent=name;$('#pack-message').textContent='مبروك! طلعت لك '+items.length+' كروت Gold حقيقية من '+league+'. اتضافوا كلهم لناديك.';
+  items.forEach((p,index)=>{const b=document.createElement('button');b.type='button';b.className='pack-player-item';b.setAttribute('aria-label',p.name+' '+p.rating);
+   const img=document.createElement('img');img.src=p.image;img.alt=p.name+' Gold '+p.rating;img.loading='eager';img.onerror=()=>{img.remove();b.classList.add('card-image-fallback');b.innerHTML='<b>'+p.rating+'</b><strong>'+p.name+'</strong><small>'+p.position+'</small>';};
+   b.appendChild(img);b.addEventListener('click',()=>openPlayerModal(p,index));reveal.appendChild(b);});
  }
  $('#pack-modal').classList.remove('hidden');
 }
-
-$$('.pack-open').forEach(btn => btn.addEventListener('click', () => showPackModal(btn.dataset.pack, Number(btn.dataset.price))));
+$$('[data-pack-league]').forEach(btn=>btn.addEventListener('click',()=>{const league=btn.dataset.packLeague,pack=leaguePackInfo[league];if(pack)showPackModal(pack.title,pack.price,league);}));
 $$( '[data-close-modal]' ).forEach(btn => btn.addEventListener('click', () => $('#pack-modal').classList.add('hidden')));
+
 $('#search-player').addEventListener('click', () => {
   const q = $('#player-search').value.trim();
   $('#market-results').innerHTML = q
