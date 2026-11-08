@@ -131,12 +131,12 @@ function tackle(){
  const rival=black.slice().sort((a,b)=>a.group.position.distanceTo(controlled.group.position)-b.group.position.distanceTo(controlled.group.position))[0];
  if(rival && rival.group.position.distanceTo(controlled.group.position)<2.25){
    const toward=controlled.group.position.clone().sub(rival.group.position).normalize();rival.group.position.addScaledVector(toward,1.1);
-   ball.position.copy(controlled.group.position).add(new THREE.Vector3(0,.38,-.75));ballVel.set(0,0,0);msg.textContent='افتكاك ناجح للكرة!';
+   ballOwner=controlled;ball.position.copy(controlled.group.position).add(new THREE.Vector3(0,.38,-.75));ballVel.set(0,0,0);msg.textContent='افتكاك ناجح للكرة!';
  } else msg.textContent='اقترب من المنافس لتنفيذ الالتحام';
 }
 function shootBall(){
  if(ball.position.distanceTo(controlled.group.position)>3.2){msg.textContent='اقترب من الكرة أولاً';return;}
- ballOwner=null;const dir=new THREE.Vector3(-ball.position.x*.025,0,-Math.sign(controlled.group.position.z||1));
+ ballOwner=null;const dir=new THREE.Vector3(-ball.position.x*.025,0,-1);
  dir.x+=(Math.random()-.5)*.22;dir.normalize();
  const weakFoot=0.8;const power=controlled.stats.shoot*weakFoot/100;
  ballVel.copy(dir.multiplyScalar(13+power*15));ballVel.y=3+power*3;msg.textContent='تسديدة!';
@@ -186,17 +186,28 @@ function animate(){
  const input=new THREE.Vector3((keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0)+joystickInput.x,0,(keys.s||keys.arrowdown?1:0)-(keys.w||keys.arrowup?1:0)+joystickInput.z);
  if(input.lengthSq()>0){input.clampLength(0,1);const moveSpeed=controlled.stats.speed*(sprinting?1.48:1);controlled.velocity.lerp(input.clone().multiplyScalar(moveSpeed),Math.min(1,dt*8));controlled.group.position.addScaledVector(controlled.velocity,dt);controlled.group.rotation.y=Math.atan2(input.x,input.z);}
  else controlled.velocity.multiplyScalar(.82);
- // Teammates seek useful positions; opponents press the ball
- for(const p of white){if(p!==controlled){const target=ball.position.clone().add(new THREE.Vector3(p.group.position.x*.18,0,Math.max(4,p.group.position.z*.18)));moveToward(p,target,dt,p.stats.speed*.65);}}
- for(const p of black){const target=ball.position.clone();target.z+=Math.sign(-ball.position.z)*1.0;moveToward(p,target,dt,p.stats.speed*.72);}
+ // Teammates keep a 4-3-3 shape while offering passing lanes.
+ for(const p of white){if(p!==controlled){const target=p.homePosition.clone().lerp(ball.position,.32);target.z=Math.max(-38,Math.min(45,target.z));moveToward(p,target,dt,p.stats.speed*.72);}}
+ // The three closest opponents press; the rest hold their defensive shape.
+ const pressing=new Set(black.slice().sort((a,b)=>a.group.position.distanceTo(ball.position)-b.group.position.distanceTo(ball.position)).slice(0,3));
+ for(const p of black){const target=pressing.has(p)?ball.position.clone().add(new THREE.Vector3(0,0,1.1)):p.homePosition.clone().lerp(ball.position,.12);moveToward(p,target,dt,p.stats.speed*.76);}
  // Keep players inside the pitch
  for(const p of players){p.group.position.x=THREE.MathUtils.clamp(p.group.position.x,-32,32);p.group.position.z=THREE.MathUtils.clamp(p.group.position.z,-50,50);for(const q of players)if(q!==p&&q.team!==p.team)resolveDuel(p,q);}
- // Ball integration: custom gameplay physics (gravity, rolling drag, bounces)
- ballVel.y-=9.81*dt;ball.position.addScaledVector(ballVel,dt);
- if(ball.position.y<.36){ball.position.y=.36;if(ballVel.y<0)ballVel.y*=-.34;ballVel.x*=.985;ballVel.z*=.985;}
- ballVel.multiplyScalar(Math.pow(.992,dt*60));
- // Nearby player can collect a slow ball
- for(const p of players){const d=p.group.position.distanceTo(ball.position);if(d<.95&&ballVel.length()<5){ball.position.x=THREE.MathUtils.lerp(ball.position.x,p.group.position.x,Math.min(1,dt*7));ball.position.z=THREE.MathUtils.lerp(ball.position.z,p.group.position.z+ (p.team==='white'?-0.7:0.7),Math.min(1,dt*7));}}
+ // Ball possession, close control and grounded/aerial ball physics.
+ if(ballOwner){
+  const forward=new THREE.Vector3(Math.sin(ballOwner.group.rotation.y),0,Math.cos(ballOwner.group.rotation.y));
+  const dribbleTarget=ballOwner.group.position.clone().addScaledVector(forward,.82);dribbleTarget.y=.38;
+  ball.position.lerp(dribbleTarget,Math.min(1,dt*13));ballVel.set(0,0,0);
+  if(ballOwner.team==='black'&&ballOwner.group.position.z>36){ballOwner=null;ballVel.set((Math.random()-.5)*3,2.2,17);msg.textContent='المنافس يسدد!';}
+ }else{
+  ballVel.y-=9.81*dt;ball.position.addScaledVector(ballVel,dt);
+  if(ball.position.y<.36){ball.position.y=.36;if(ballVel.y<0)ballVel.y*=-.34;ballVel.x*=.985;ballVel.z*=.985;}
+  ballVel.multiplyScalar(Math.pow(.992,dt*60));
+  const nearest=players.slice().sort((a,b)=>a.group.position.distanceTo(ball.position)-b.group.position.distanceTo(ball.position))[0];
+  if(nearest&&nearest.group.position.distanceTo(ball.position)<1.2&&ballVel.length()<6){ballOwner=nearest;if(nearest.team==='white'){controlled=nearest;msg.textContent='استحوذت على الكرة';}else msg.textContent='الخصم استحوذ على الكرة';}
+ }
+ // Animate running limbs from each player's actual movement.
+ for(const p of players){const motion=Math.min(1,p.velocity.length()/3.6),swing=Math.sin(elapsed*12+p.phase)*motion*.58;p.legs[0].rotation.x=swing;p.legs[1].rotation.x=-swing;p.arms[0].rotation.x=-swing*.62;p.arms[1].rotation.x=swing*.62;}
  // Goals
  if(Math.abs(ball.position.z)>52 && Math.abs(ball.position.x)<3.65 && ball.position.y<2.5){if(ball.position.z<0)scoreW++;else scoreB++;scoreEl.textContent=`${scoreW} - ${scoreB}`;msg.textContent='GOAL!';resetBall();}
  if(Math.abs(ball.position.x)>34||Math.abs(ball.position.z)>56){resetBall();}
@@ -568,7 +579,19 @@ function showPackModal(name,price,league){
  }
  $('#pack-modal').classList.remove('hidden');
 }
-$$('[data-pack-league]').forEach(btn=>btn.addEventListener('click',()=>{const league=btn.dataset.packLeague,pack=leaguePackInfo[league];if(pack)showPackModal(pack.title,pack.price,league);}));
+let selectedPackLeague='';
+$('[data-select-league]').forEach(btn=>btn.addEventListener('click',()=>{
+ selectedPackLeague=btn.dataset.selectLeague;
+ const pack=leaguePackInfo[selectedPackLeague];if(!pack)return;
+ $('.league-pack-card').forEach(card=>card.classList.toggle('selected',card.dataset.league===selectedPackLeague));
+ $('#selected-league-pack').classList.remove('hidden');
+ $('#selected-pack-name').textContent=pack.title;
+ $('#selected-pack-description').textContent='5 لاعبين Gold عشوائيين من '+selectedPackLeague+'، كل كارت بصورته وتقييمه وإحصائياته';
+ $('#selected-pack-art').className='pack-art league-pack '+({'Premier League':'premier-pack','LaLiga':'laliga-pack','Bundesliga':'bundes-pack','Serie A':'serie-pack','Ligue 1':'ligue-pack'}[selectedPackLeague]);
+ $('#selected-pack-art').innerHTML='<span>'+pack.flag+'</span><b>GOLD</b><small>5 PLAYERS</small>';
+ $('#open-selected-pack').textContent='افتح الباك · '+pack.price.toLocaleString('en-US')+' 🪙';
+}));
+$('#open-selected-pack').addEventListener('click',()=>{const pack=leaguePackInfo[selectedPackLeague];if(pack)showPackModal(pack.title,pack.price,selectedPackLeague);});
 $$( '[data-close-modal]' ).forEach(btn => btn.addEventListener('click', () => $('#pack-modal').classList.add('hidden')));
 
 $('#search-player').addEventListener('click', () => {
