@@ -437,7 +437,7 @@ function openSquadPicker(slot){
   const list=$('#squad-picker-list');list.replaceChildren();
   clubPlayers.filter(p=>(!Object.values(squadAssignments).includes(p.id)&&!Object.values(squadAssignments).includes(p.name)||squadAssignments[slot]===p.id||squadAssignments[slot]===p.name) && (p.position===slot || (slot.startsWith('CB')&&p.position==='CB') || (slot.startsWith('CM')&&['CM','CDM','CAM'].includes(p.position)) || (slot==='LW'&&['LW','LM'].includes(p.position)) || (slot==='RW'&&['RW','RM'].includes(p.position)) || (slot==='LB'&&['LB','LWB'].includes(p.position)) || (slot==='RB'&&['RB','RWB'].includes(p.position)) || (slot==='ST'&&['ST','CF'].includes(p.position)) || (slot==='GK'&&p.position==='GK'))).forEach(p=>{
     const b=document.createElement('button');b.type='button';b.className='squad-pick-card';b.innerHTML=(p.image?'<img src="'+p.image+'" alt="" loading="lazy">':'')+'<span><b>'+p.rating+' OVR</b><br>'+p.name+'<br>'+p.position+'</span>';
-    b.addEventListener('click',()=>{squadAssignments[slot]=p.name;localStorage.setItem('ut27-squad',JSON.stringify(squadAssignments));activeSquadSlot='';$('#squad-picker').classList.add('hidden');renderSquad();});list.appendChild(b);
+    b.addEventListener('click',()=>{squadAssignments[slot]=p.id||p.name;localStorage.setItem('ut27-squad',JSON.stringify(squadAssignments));activeSquadSlot='';$('#squad-picker').classList.add('hidden');renderSquad();});list.appendChild(b);
   });
   if(!list.children.length)list.innerHTML='<span class="bench-empty">لا يوجد لاعب مناسب لهذا المركز في النادي.</span>';
   $('#squad-picker').classList.remove('hidden');
