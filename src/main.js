@@ -217,7 +217,7 @@ const matchHud = $('#match-hud');
 const matchControls = $('#match-controls');
 const difficultyPanel = $('#difficulty-panel');
 let selectedDifficulty = '';
-let coins = 5436;
+let coins = Number(localStorage.getItem('ut27-coins') || 5436);
 let currentTab = 'home';
 let quickIndex = 0;
 let activeQuickItems = [];
@@ -270,7 +270,7 @@ $$('.league-choice').forEach(btn => btn.addEventListener('click', () => {
 $('#starter-continue').addEventListener('click', () => {
   localStorage.setItem('ut27-starter-done', 'yes');
   openApp();
-  showPackModal('Starter Pack', 0);
+  showPackModal('Starter Pack', 0, 'starter');
 });
 
 
@@ -306,6 +306,13 @@ const eventPlayers = [
   {name:"Lamine Camara",rating:85,position:"CM",club:"Monaco",competition:"UECL",stats:[84,74,86,84,81,80]},
   {name:"Timothy Weah",rating:85,position:"RM",club:"Marseille",competition:"UEL",stats:[92,82,81,83,81,78]}
 ];
+let clubPlayers=(()=>{try{return JSON.parse(localStorage.getItem('ut27-club')||'[]')}catch{return []}})();
+function saveClub(){localStorage.setItem('ut27-club',JSON.stringify(clubPlayers));}
+const starterNames=['Adam Wilson','Luca Moretti','Noah Fischer','Omar Hassan','Leo Martin','Ethan Brooks','Youssef Ali','Mateo Silva','Daniel Costa','Samir Nabil','Ben Carter','Karim Adel','Milan Novak','Alex Turner','Hugo Perez','Rami Saleh','Theo Laurent','Ibrahim Said','Nico Weber','Amir Farouk','Ryan Cole','Tariq Mansour','Felix Braun','Ziad Mostafa','Lucas Reed','Marek Zielinski','Khaled Amin','Joao Mendes','Moussa Diallo','Tomáš Kral'];
+const starterPositions=['GK','LB','CB','CB','RB','CDM','CM','CAM','LW','ST','RW','GK','CB','CB','LB','RB','CM','CDM','CM','ST','LW','RW','CB','CM','LB','RB','CAM','ST','CDM','CB'];
+function makeStarterClub(){return starterNames.map((name,i)=>{const rating=i===0?80:60+((i*7+3)%15);return{id:'starter-'+Date.now()+'-'+i,name,rating,position:starterPositions[i],club:'UT Academy',competition:'Starter',tier:i===0?'Gold':rating<65?'Bronze':'Silver',stats:[65+i%25,58+i%28,61+i%27,60+i%30,55+i%32,58+i%29]};});}
+function makePackPlayers(name,count){const pool=name.toLowerCase().includes('rttk')?eventPlayers:eventPlayers.filter(p=>p.rating>=85);return Array.from({length:count},(_,i)=>{const p=pool[Math.floor(Math.random()*pool.length)];return{...p,id:'pack-'+Date.now()+'-'+i+'-'+Math.random().toString(36).slice(2),tier:p.rating>=80?'Gold':'Silver'};});}
+function renderClubCollection(){const list=$('#club-collection-list');if(!list)return;list.replaceChildren();$('#club-player-count').textContent=clubPlayers.length;clubPlayers.forEach(p=>{const b=document.createElement('button');b.className='club-card';b.type='button';b.innerHTML='<b>'+p.rating+'</b><small>'+p.position+'</small><strong>'+p.name+'</strong><em>'+p.tier+'</em>';b.addEventListener('click',()=>openSquadPicker(p.position));list.appendChild(b);});}
 const statLabels = ["PAC","SHO","PAS","DRI","DEF","PHY"];
 const keeperStatLabels = ["DIV","HAN","KIC","REF","SPD","POS"];
 function labelsForPlayer(player){return player.position==='GK'?keeperStatLabels:statLabels;}
@@ -327,18 +334,12 @@ function buildPlayerCard(player,index,featured=false) {
   return card;
 }
 function renderEventCards(){
-  const grid=$('#event-card-grid'),featured=$('#featured-card-grid');
-  if(!grid||!featured)return;
-  const teamImage='https://www.fifplay.com/img/public/fc-27-rttk-team-1.jpg';
-  grid.innerHTML='<img class="event-promo-image" src="'+teamImage+'" alt="FC 27 RTTK Team 1 — all 30 official player cards" loading="eager" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'grid\'"><div class="promo-image-fallback">تعذر تحميل صورة فريق RTTK من المصدر</div>';
-  const featuredPlayers=[
-    {name:'Jude Bellingham',rating:91,position:'CAM',crop:'bellingham'},
-    {name:'Ousmane Dembélé',rating:91,position:'ST',crop:'dembele'},
-    {name:'Pedri',rating:91,position:'CM',crop:'pedri'},
-    {name:'Luis Díaz',rating:90,position:'LM',crop:'diaz'}
-  ];
-  featured.innerHTML=featuredPlayers.map(p=>'<div class="featured-player-crop '+p.crop+'" role="img" aria-label="'+p.name+' RTTK '+p.rating+'"><img src="'+teamImage+'" alt="'+p.name+' RTTK '+p.rating+'" loading="eager"><span>'+p.rating+' · '+p.position+'</span><b>'+p.name+'</b></div>').join('');
+ const grid=$('#event-card-grid'),featured=$('#featured-card-grid');if(!grid||!featured)return;
+ const teamImage='https://www.fifplay.com/img/public/fc-27-rttk-team-1.jpg';
+ grid.innerHTML='<img class="event-promo-image" src="'+teamImage+'" alt="جميع بطاقات RTTK الثلاثين" loading="eager" onerror="this.style.display=\\'none\\';this.nextElementSibling.style.display=\\'grid\\'"><div class="promo-image-fallback">تعذر تحميل صورة الحدث</div>';
+ ['Jude Bellingham','Ousmane Dembélé','Pedri','Luis Díaz'].forEach(name=>{const index=eventPlayers.findIndex(p=>p.name===name);if(index>=0)featured.appendChild(buildPlayerCard(eventPlayers[index],index,true));});
 }
+
 let selectedPlayer=null;
 function openPlayerModal(player,index){
   selectedPlayer={player,index};
@@ -359,7 +360,7 @@ const benchPanel = $('#bench-panel');
 function renderBench(){
   const list=$('#bench-list'); if(!list)return;
   const used=new Set(Object.values(squadAssignments));
-  const bench=eventPlayers.filter(p=>!used.has(p.name));
+  const bench=clubPlayers.filter(p=>!used.has(p.name));
   list.replaceChildren();
   bench.slice(0,12).forEach(p=>{
     const b=document.createElement('button');b.className='bench-player';b.type='button';
@@ -380,7 +381,7 @@ function openSquadPicker(slot){
   activeSquadSlot=slot;
   $('#squad-picker-title').textContent='اختيار لاعب لمركز '+slot;
   const list=$('#squad-picker-list');list.replaceChildren();
-  eventPlayers.filter(p=>p.position===slot || (slot.startsWith('CB')&&p.position==='CB') || (slot.startsWith('CM')&&['CM','CDM','CAM'].includes(p.position)) || (slot==='LW'&&['LW','LM'].includes(p.position)) || (slot==='RW'&&['RW','RM'].includes(p.position)) || (slot==='LB'&&['LB','LWB'].includes(p.position)) || (slot==='RB'&&['RB','RWB'].includes(p.position)) || (slot==='ST'&&['ST','CF'].includes(p.position)) || (slot==='GK'&&p.position==='GK')).forEach(p=>{
+  clubPlayers.filter(p=>p.position===slot || (slot.startsWith('CB')&&p.position==='CB') || (slot.startsWith('CM')&&['CM','CDM','CAM'].includes(p.position)) || (slot==='LW'&&['LW','LM'].includes(p.position)) || (slot==='RW'&&['RW','RM'].includes(p.position)) || (slot==='LB'&&['LB','LWB'].includes(p.position)) || (slot==='RB'&&['RB','RWB'].includes(p.position)) || (slot==='ST'&&['ST','CF'].includes(p.position)) || (slot==='GK'&&p.position==='GK')).forEach(p=>{
     const b=document.createElement('button');b.type='button';b.innerHTML='<b>'+p.rating+' OVR</b><br>'+p.name+'<br>'+p.position;
     b.addEventListener('click',()=>{squadAssignments[slot]=p.name;$('#squad-picker').classList.add('hidden');renderSquad();});list.appendChild(b);
   });
@@ -400,7 +401,8 @@ $$('[data-close-player]').forEach(btn=>btn.addEventListener('click',closePlayerM
 $$('[data-player-action]').forEach(btn=>btn.addEventListener('click',()=>{
   const action=btn.dataset.playerAction;
   if(action==='back'){closePlayerModal();}
-  else if(action==='squad'||action==='sbc'){closePlayerModal();switchTab(action);}
+  else if(action==='squad'){const p=selectedPlayer?.player;if(p&&!clubPlayers.some(x=>x.name===p.name)){clubPlayers.push({...p,id:'event-'+Date.now(),tier:'Special'});saveClub();renderSquad();}closePlayerModal();switchTab('squad');}
+   else if(action==='sbc'){closePlayerModal();switchTab(action);}
   else {
     $('#player-modal-title').textContent='الأنماط الأساسية';
     $('#player-actions').innerHTML='<button type="button">أساسي</button><button type="button">هجومي</button><button type="button">دفاعي</button><button type="button" data-player-back>رجوع</button>';
@@ -479,18 +481,20 @@ function leaveMatch() {
   difficultyPanel.classList.remove('hidden');
 }
 $('#leave-match').addEventListener('click', leaveMatch);
+$('#coin-count').textContent=coins.toLocaleString('en-US');$('#store-coins').textContent=coins.toLocaleString('en-US');
 
-function showPackModal(name, price) {
-  if (price > coins) { $('#pack-title').textContent = name; $('#pack-message').textContent = 'رصيدك من الكوينز غير كافٍ.'; }
-  else {
-    coins -= price;
-    $('#coin-count').textContent = coins.toLocaleString('en-US');
-    $('#store-coins').textContent = coins.toLocaleString('en-US');
-    $('#pack-title').textContent = name;
-    $('#pack-message').textContent = 'تم فتح باك تجريبي. العناصر المعروضة ليست لاعبين حقيقيين أو احتمالات رسمية.';
-  }
-  $('#pack-modal').classList.remove('hidden');
+function showPackModal(name,price,kind='standard'){
+ const reveal=$('#pack-reveal-list');
+ if(price>coins){$('#pack-title').textContent=name;$('#pack-message').textContent='رصيدك من الكوينز غير كافٍ.';reveal.innerHTML='';}
+ else{
+  coins-=price;localStorage.setItem('ut27-coins',String(coins));$('#coin-count').textContent=coins.toLocaleString('en-US');$('#store-coins').textContent=coins.toLocaleString('en-US');
+  const items=kind==='starter'&&!localStorage.getItem('ut27-starter-claimed')?(localStorage.setItem('ut27-starter-claimed','yes'),makeStarterClub()):makePackPlayers(name,name.toLowerCase().includes('rttk')?5:12);
+  clubPlayers.push(...items);saveClub();renderSquad();$('#pack-title').textContent=name;$('#pack-message').textContent='تمت إضافة '+items.length+' لاعب إلى ناديك. اختارهم من التشكيلة.';
+  reveal.innerHTML=items.map(p=>'<div class="pack-reveal-player"><b>'+p.rating+'</b><small>'+p.position+'</small><strong>'+p.name+'</strong><em>'+p.tier+'</em></div>').join('');
+ }
+ $('#pack-modal').classList.remove('hidden');
 }
+
 $$('.pack-open').forEach(btn => btn.addEventListener('click', () => showPackModal(btn.dataset.pack, Number(btn.dataset.price))));
 $$( '[data-close-modal]' ).forEach(btn => btn.addEventListener('click', () => $('#pack-modal').classList.add('hidden')));
 $('#search-player').addEventListener('click', () => {
