@@ -125,6 +125,92 @@ const formationSlots=['GK','LB','CB1','CB2','RB','CM1','CM2','CM3','LW','ST','RW
 const formationPresets={"4-3-3":[[0,45],[-25,29],[-9,31],[9,31],[25,29],[0,17],[-14,8],[14,8],[-23,-11],[0,-21],[23,-11]],"4-4-2":[[0,45],[-25,29],[-9,31],[9,31],[25,29],[-24,12],[-8,12],[8,12],[24,12],[-10,-20],[10,-20]],"4-2-3-1":[[0,45],[-25,29],[-9,31],[9,31],[25,29],[-12,17],[12,17],[-22,-5],[0,-8],[0,-25],[22,-5]],"4-3-2-1":[[0,45],[-25,29],[-9,31],[9,31],[25,29],[0,17],[-14,8],[14,8],[-12,-10],[0,-23],[12,-10]],"4-1-2-1-2":[[0,45],[-25,29],[-9,31],[9,31],[25,29],[0,20],[-18,7],[18,7],[0,-2],[-10,-22],[10,-22]],"4-4-1-1":[[0,45],[-25,29],[-9,31],[9,31],[25,29],[-24,12],[-8,12],[8,12],[24,12],[0,-5],[0,-24]],"4-2-2-2":[[0,45],[-25,29],[-9,31],[9,31],[25,29],[-12,18],[12,18],[-18,-3],[18,-3],[-9,-22],[9,-22]],"4-3-1-2":[[0,45],[-25,29],[-9,31],[9,31],[25,29],[0,17],[-14,8],[14,8],[0,-4],[-10,-23],[10,-23]],"4-5-1":[[0,45],[-25,29],[-9,31],[9,31],[25,29],[-25,9],[-12,14],[0,16],[12,14],[25,9],[0,-23]],"3-5-2":[[0,45],[-18,30],[0,33],[18,30],[-27,10],[-13,14],[0,17],[13,14],[27,10],[-10,-22],[10,-22]],"3-4-3":[[0,45],[-18,30],[0,33],[18,30],[-24,12],[-8,12],[8,12],[24,12],[-20,-16],[0,-22],[20,-16]],"3-4-1-2":[[0,45],[-18,30],[0,33],[18,30],[-24,12],[-8,12],[8,12],[24,12],[0,-3],[-10,-22],[10,-22]],"3-4-2-1":[[0,45],[-18,30],[0,33],[18,30],[-24,12],[-8,12],[8,12],[24,12],[-12,-7],[12,-7],[0,-24]],"5-3-2":[[0,45],[-30,30],[-15,32],[0,33],[15,32],[30,30],[-14,10],[0,15],[14,10],[-10,-22],[10,-22]],"5-4-1":[[0,45],[-30,30],[-15,32],[0,33],[15,32],[30,30],[-24,10],[-8,12],[8,12],[24,10],[0,-23]],"5-2-1-2":[[0,45],[-30,30],[-15,32],[0,33],[15,32],[30,30],[-12,14],[12,14],[0,-4],[-10,-22],[10,-22]],"5-2-3":[[0,45],[-30,30],[-15,32],[0,33],[15,32],[30,30],[-12,14],[12,14],[-20,-16],[0,-22],[20,-16]]};
 let selectedFormation=localStorage.getItem('ut27-formation')||'4-3-3';if(!formationPresets[selectedFormation])selectedFormation='4-3-3';
 let formationPoints=formationPresets[selectedFormation];
+let squad3D=null,squad3DRenderer=null,squad3DCamera=null,squad3DPlayers=new Map(),squad3DResizeObserver=null;
+function squadPitchLine(group,x1,z1,x2,z2,material,width=.14){
+ const dx=x2-x1,dz=z2-z1,len=Math.hypot(dx,dz);
+ const mesh=new THREE.Mesh(new THREE.BoxGeometry(width,.045,len),material);
+ mesh.position.set((x1+x2)/2,.055,(z1+z2)/2);mesh.rotation.y=Math.atan2(dx,dz);group.add(mesh);
+}
+function makeSquadMiniPlayer(player,index){
+ let seed=0;for(const ch of String(player.id||player.name||index))seed=(seed*31+ch.charCodeAt(0))>>>0;
+ const pick=(arr,n)=>arr[(seed>>>n)%arr.length];
+ const group=new THREE.Group();
+ const kitColors=[0x163d72,0x174e91,0x0c5a55,0x472b70,0x7b2434,0x253b43];
+ const kit=new THREE.MeshStandardMaterial({color:pick(kitColors,3),roughness:.7});
+ const trim=new THREE.MeshStandardMaterial({color:pick([0xf3d36c,0xe9edf4,0x45c4ad,0xd85b58],7),roughness:.55});
+ const skin=new THREE.MeshStandardMaterial({color:pick([0xe6b98e,0xc98d65,0x9b6347,0xf0c9a4,0x754832],11),roughness:.86});
+ const hair=new THREE.MeshStandardMaterial({color:pick([0x17191e,0x39261e,0x6b4930,0xb1a078,0x4b4b4b],15),roughness:.9});
+ const shorts=new THREE.MeshStandardMaterial({color:0x172330,roughness:.8});
+ const boot=new THREE.MeshStandardMaterial({color:pick([0xf0f1e9,0xd4b14d,0x20242b,0xe45d4f],19),roughness:.5});
+ const sphere=(r,mat,pos,scale)=>{const o=new THREE.Mesh(new THREE.SphereGeometry(r,12,10),mat);o.position.set(...pos);if(scale)o.scale.set(...scale);o.castShadow=true;group.add(o);return o;};
+ const torso=new THREE.Mesh(new THREE.CapsuleGeometry(.48,.82,4,8),kit);torso.position.y=1.85;torso.castShadow=true;group.add(torso);
+ const chest=new THREE.Mesh(new THREE.BoxGeometry(.82,.16,.54),trim);chest.position.set(0,2.1,0);group.add(chest);
+ const shortMesh=new THREE.Mesh(new THREE.BoxGeometry(.72,.43,.48),shorts);shortMesh.position.y=1.22;shortMesh.castShadow=true;group.add(shortMesh);
+ sphere(.29,skin,[0,2.72,0],[.9,1.06,.9]);
+ const cap=sphere(.3,hair,[0,2.91,-.015],[1,.48,1]);cap.position.z=-.035;
+ // Hair profile varies so the squad is not a row of identical silhouettes.
+ const style=(seed>>>23)%3;
+ if(style===1)sphere(.18,hair,[0,3.02,.08],[1,.42,1]);
+ if(style===2){sphere(.13,hair,[-.22,2.82,0],[.45,1.1,1]);sphere(.13,hair,[.22,2.82,0],[.45,1.1,1]);}
+ for(const side of [-1,1]){
+  const arm=new THREE.Mesh(new THREE.CapsuleGeometry(.12,.62,3,6),skin);arm.position.set(side*.55,1.88,0);arm.rotation.z=side*-.16;arm.castShadow=true;group.add(arm);
+  const thigh=new THREE.Mesh(new THREE.CapsuleGeometry(.16,.47,3,6),skin);thigh.position.set(side*.2,.72,0);thigh.castShadow=true;group.add(thigh);
+  const leg=new THREE.Mesh(new THREE.CapsuleGeometry(.13,.5,3,6),skin);leg.position.set(side*.2,.3,.015);leg.castShadow=true;group.add(leg);
+  const shoe=new THREE.Mesh(new THREE.BoxGeometry(.22,.13,.42),boot);shoe.position.set(side*.2,.1,.12);shoe.castShadow=true;group.add(shoe);
+ }
+ const shadow=new THREE.Mesh(new THREE.CircleGeometry(.68,20),new THREE.MeshBasicMaterial({color:0x07170f,transparent:true,opacity:.24,depthWrite:false}));shadow.rotation.x=-Math.PI/2;shadow.position.y=.035;group.add(shadow);
+ group.scale.setScalar(player.position==='GK'?1.03:1);
+ return group;
+}
+function initSquadPitch3D(){
+ const host=$('#squad-pitch');if(!host||squad3DRenderer)return;
+ squad3D=new THREE.Scene();squad3D.background=new THREE.Color(0x153f30);
+ squad3DCamera=new THREE.OrthographicCamera(-43,43,64.5,-64.5,.1,250);
+ squad3DCamera.position.set(0,100,0);squad3DCamera.up.set(0,0,-1);squad3DCamera.lookAt(0,0,0);
+ squad3D.add(new THREE.HemisphereLight(0xe7f5ff,0x183323,2.1));
+ const sun=new THREE.DirectionalLight(0xfff0cf,2.2);sun.position.set(-24,55,30);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);squad3D.add(sun);
+ const pitchGroup=new THREE.Group();squad3D.add(pitchGroup);
+ const grass=[0x17633f,0x1b7047];
+ const ground=new THREE.Mesh(new THREE.PlaneGeometry(76,120),new THREE.MeshStandardMaterial({color:grass[0],roughness:1}));ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;pitchGroup.add(ground);
+ for(let i=0;i<12;i++){const stripe=new THREE.Mesh(new THREE.PlaneGeometry(76,10),new THREE.MeshStandardMaterial({color:grass[i%2],roughness:1}));stripe.rotation.x=-Math.PI/2;stripe.position.set(0,.012,-55+i*10);pitchGroup.add(stripe);}
+ const white=new THREE.MeshBasicMaterial({color:0xf2f3e9});
+ const line=(x1,z1,x2,z2,w=.15)=>squadPitchLine(pitchGroup,x1,z1,x2,z2,white,w);
+ line(-38,-60,38,-60);line(-38,60,38,60);line(-38,-60,-38,60);line(38,-60,38,60);
+ line(-38,0,38,0);
+ line(-22,-60,-22,-42);line(22,-60,22,-42);line(-22,-42,22,-42);
+ line(-22,60,-22,42);line(22,60,22,42);line(-22,42,22,42);
+ line(-10,-60,-10,-52);line(10,-60,10,-52);line(-10,-52,10,-52);
+ line(-10,60,-10,52);line(10,60,10,52);line(-10,52,10,52);
+ const circle=new THREE.Mesh(new THREE.RingGeometry(9.05,9.2,64),white);circle.rotation.x=-Math.PI/2;circle.position.y=.06;pitchGroup.add(circle);
+ const spotMat=new THREE.MeshBasicMaterial({color:0xf6f5e8});
+ for(const z of [-48,48,0]){const dot=new THREE.Mesh(new THREE.CircleGeometry(.42,16),spotMat);dot.rotation.x=-Math.PI/2;dot.position.set(0,.065,z);pitchGroup.add(dot);}
+ squad3DRenderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'low-power'});
+ squad3DRenderer.setPixelRatio(Math.min(devicePixelRatio,1.5));squad3DRenderer.outputColorSpace=THREE.SRGBColorSpace;
+ squad3DRenderer.shadowMap.enabled=true;squad3DRenderer.shadowMap.type=THREE.PCFSoftShadowMap;
+ squad3DRenderer.domElement.className='squad-three-canvas';squad3DRenderer.domElement.setAttribute('aria-label','ملعب التشكيلة ثلاثي الأبعاد');
+ host.prepend(squad3DRenderer.domElement);
+ squad3DResizeObserver=new ResizeObserver(()=>resizeSquadPitch3D());squad3DResizeObserver.observe(host);
+ resizeSquadPitch3D();
+}
+function resizeSquadPitch3D(){
+ if(!squad3DRenderer||!squad3DCamera)return;
+ const host=$('#squad-pitch');if(!host)return;
+ const w=Math.max(1,host.clientWidth),h=Math.max(1,host.clientHeight),aspect=w/h;
+ const viewH=128,viewW=viewH*aspect;
+ squad3DCamera.left=-viewW/2;squad3DCamera.right=viewW/2;squad3DCamera.top=viewH/2;squad3DCamera.bottom=-viewH/2;squad3DCamera.updateProjectionMatrix();
+ squad3DRenderer.setSize(w,h,false);squad3DRenderer.render(squad3D,squad3DCamera);
+}
+function updateSquadPitch3D(){
+ if(!$('#squad-pitch'))return;initSquadPitch3D();
+ const coords=formationPresets[selectedFormation]||formationPresets['4-3-3'];
+ formationSlots.forEach((slot,i)=>{
+  const player=clubPlayers.find(p=>p.id===squadAssignments[slot]||p.name===squadAssignments[slot]);
+  const old=squad3DPlayers.get(slot);if(old){squad3D.remove(old);squad3DPlayers.delete(slot);}
+  if(player){const model=makeSquadMiniPlayer(player,i);const [x,z]=coords[i]||[0,0];model.position.set(x,0,z);squad3D.add(model);squad3DPlayers.set(slot,model);}
+ });
+ resizeSquadPitch3D();
+}
+
 let savedMatchClub=(()=>{try{return JSON.parse(localStorage.getItem('ut27-club')||'[]')}catch{return []}})();
 let savedMatchLineup=(()=>{try{return JSON.parse(localStorage.getItem('ut27-squad')||'{}')}catch{return {}}})();
 function matchCardForSlot(slot){const name=savedMatchLineup[slot];return savedMatchClub.find(p=>p.id===name||p.name===name)||null;}
@@ -304,7 +390,7 @@ function animate(){
  renderer.render(scene,camera);
 }
 animate();
-addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);if(squad3DRenderer)resizeSquadPitch3D();});
 
 
 
@@ -512,6 +598,7 @@ function renderBench(){
   });
 }
 function renderSquad(){
+ updateSquadPitch3D();
  const select=$('#formation-select');if(select)select.value=selectedFormation;
  const coords=formationPresets[selectedFormation]||formationPresets['4-3-3'];
  $$('#squad-pitch [data-slot]').forEach((btn,i)=>{const player=clubPlayers.find(p=>p.id===squadAssignments[btn.dataset.slot]||p.name===squadAssignments[btn.dataset.slot]);const [x,z]=coords[i]||[0,0];btn.style.left=((x+38)/76*100)+'%';btn.style.top=((60+z)/120*100)+'%';btn.style.bottom='auto';btn.classList.toggle('selected',!!player);btn.innerHTML=player?'<span class="squad-token-rating">'+player.rating+'</span><span class="squad-token-position">'+player.position+'</span><span class="squad-token-name">'+player.name.split(' ').slice(-1)[0]+'</span>':'<span class="squad-token-empty">'+btn.dataset.slot+'</span>';});
