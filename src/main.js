@@ -531,7 +531,7 @@ function renderClubCollection(){
  clubPlayers.forEach((p,index)=>{const b=document.createElement('button');b.className='club-card';b.type='button';b.setAttribute('aria-label',p.name+' '+p.rating);
  const img=document.createElement('img');img.src=p.image||'';img.alt=p.name;img.loading='lazy';img.onerror=()=>{img.remove();b.classList.add('club-card-fallback');};
  const meta=document.createElement('span');meta.innerHTML='<b>'+p.rating+'</b><small>'+p.position+'</small><strong>'+p.name+'</strong>';
- b.append(img,meta);b.addEventListener('click',()=>openSquadPicker(p.position));list.appendChild(b);});
+ b.append(img,meta);b.addEventListener('click',()=>{const slot=activeSquadSlot||formationSlots.find(k=>!squadAssignments[k]);if(!slot){openSquadPicker('ST');return;}squadAssignments[slot]=p.id||p.name;localStorage.setItem('ut27-squad',JSON.stringify(squadAssignments));activeSquadSlot='';$('#squad-picker').classList.add('hidden');renderSquad();});list.appendChild(b);});
 }
 const statLabels = ["PAC","SHO","PAS","DRI","DEF","PHY"];
 const keeperStatLabels = ["DIV","HAN","KIC","REF","SPD","POS"];
@@ -611,16 +611,25 @@ function renderSquad(){
 
 function openSquadPicker(slot){
   activeSquadSlot=slot;
-  $('#squad-picker-title').textContent='اختيار لاعب لمركز '+slot;
-  const list=$('#squad-picker-list');list.replaceChildren();
-  clubPlayers.filter(p=>(!Object.values(squadAssignments).includes(p.id)&&!Object.values(squadAssignments).includes(p.name)||squadAssignments[slot]===p.id||squadAssignments[slot]===p.name)).forEach(p=>{
-    const b=document.createElement('button');b.type='button';b.className='squad-pick-card';b.innerHTML=(p.image?'<img src="'+p.image+'" alt="" loading="lazy">':'')+'<span><b>'+p.rating+' OVR</b><br>'+p.name+'<br>'+p.position+'</span>';
-    b.addEventListener('click',()=>{squadAssignments[slot]=p.id||p.name;localStorage.setItem('ut27-squad',JSON.stringify(squadAssignments));activeSquadSlot='';$('#squad-picker').classList.add('hidden');renderSquad();});list.appendChild(b);
+  const title=$('#squad-picker-title'),list=$('#squad-picker-list'),panel=$('#squad-picker');
+  if(!title||!list||!panel)return;
+  title.textContent='اختار اللاعب لمركز '+slot;
+  list.replaceChildren();
+  const assigned=Object.values(squadAssignments);
+  const available=clubPlayers.filter(p=>(!assigned.includes(p.id)&&!assigned.includes(p.name))||squadAssignments[slot]===p.id||squadAssignments[slot]===p.name);
+  available.forEach(p=>{
+    const b=document.createElement('button');b.type='button';b.className='squad-pick-card';
+    const img=p.image?'<img src="'+p.image+'" alt="" loading="lazy" onerror="this.remove()">':'<span class="pick-placeholder">⚽</span>';
+    b.innerHTML=img+'<span><b>'+p.rating+' OVR</b><br>'+p.name+'<br>'+p.position+'</span>';
+    b.addEventListener('click',()=>{squadAssignments[slot]=p.id||p.name;localStorage.setItem('ut27-squad',JSON.stringify(squadAssignments));activeSquadSlot='';panel.classList.add('hidden');renderSquad();});
+    list.appendChild(b);
   });
-  if(!list.children.length)list.innerHTML='<span class="bench-empty">لا يوجد لاعب مناسب لهذا المركز في النادي.</span>';
-  $('#squad-picker').classList.remove('hidden');
+  if(!available.length)list.innerHTML='<p class="bench-empty">مفيش لاعبين متاحين في النادي. افتح باك وأضف لاعبين الأول.</p>';
+  panel.classList.remove('hidden');
+  panel.setAttribute('role','dialog');panel.setAttribute('aria-modal','true');
+  requestAnimationFrame(()=>panel.scrollIntoView({behavior:'smooth',block:'nearest'}));
 }
-$$( '#squad-pitch [data-slot]' ).forEach(btn=>btn.addEventListener('click',()=>openSquadPicker(btn.dataset.slot)));
+$('#squad-pitch')?.addEventListener('click',e=>{const btn=e.target.closest('button[data-slot]');if(!btn)return;e.preventDefault();e.stopPropagation();openSquadPicker(btn.dataset.slot);});
 $('#formation-select')?.addEventListener('change',e=>{selectedFormation=e.target.value;localStorage.setItem('ut27-formation',selectedFormation);renderSquad();});
 $('#save-squad-for-match')?.addEventListener('click',()=>{const count=formationSlots.filter(slot=>squadAssignments[slot]&&clubPlayers.some(p=>p.id===squadAssignments[slot]||p.name===squadAssignments[slot])).length;if(count<11){$('#squad-gate-note').textContent='كمّل اختيار 11 لاعب من النادي قبل دخول المباراة.';return;}$('#squad-match-gate').classList.add('hidden');switchTab('play');difficultyPanel.classList.remove('hidden');difficultyPanel.scrollIntoView({behavior:'smooth',block:'nearest'});});
 $('#close-squad-picker').addEventListener('click',()=>$('#squad-picker').classList.add('hidden'));
