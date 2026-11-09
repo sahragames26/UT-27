@@ -164,30 +164,32 @@ function makeSquadMiniPlayer(player,index){
 }
 function initSquadPitch3D(){
  const host=$('#squad-pitch');if(!host||squad3DRenderer)return;
- squad3D=new THREE.Scene();squad3D.background=new THREE.Color(0x153f30);
- squad3DCamera=new THREE.OrthographicCamera(-43,43,64.5,-64.5,.1,250);
- squad3DCamera.position.set(0,100,0);squad3DCamera.up.set(0,0,-1);squad3DCamera.lookAt(0,0,0);
- squad3D.add(new THREE.HemisphereLight(0xe7f5ff,0x183323,2.1));
- const sun=new THREE.DirectionalLight(0xfff0cf,2.2);sun.position.set(-24,55,30);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);squad3D.add(sun);
+ squad3D=new THREE.Scene();squad3D.background=new THREE.Color(0x080e16);squad3D.fog=new THREE.Fog(0x080e16,105,220);
+ squad3DCamera=new THREE.PerspectiveCamera(43,1,.1,300);
+ squad3DCamera.position.set(0,92,116);squad3DCamera.lookAt(0,0,0);
+ squad3D.add(new THREE.HemisphereLight(0xdcecff,0x101b19,2.15));
+ const flood=new THREE.DirectionalLight(0xffe9c5,2.5);flood.position.set(-25,55,30);flood.castShadow=true;flood.shadow.mapSize.set(1024,1024);squad3D.add(flood);
  const pitchGroup=new THREE.Group();squad3D.add(pitchGroup);
- const grass=[0x17633f,0x1b7047];
- const ground=new THREE.Mesh(new THREE.PlaneGeometry(76,120),new THREE.MeshStandardMaterial({color:grass[0],roughness:1}));ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;pitchGroup.add(ground);
- for(let i=0;i<12;i++){const stripe=new THREE.Mesh(new THREE.PlaneGeometry(76,10),new THREE.MeshStandardMaterial({color:grass[i%2],roughness:1}));stripe.rotation.x=-Math.PI/2;stripe.position.set(0,.012,-55+i*10);pitchGroup.add(stripe);}
- const white=new THREE.MeshBasicMaterial({color:0xf2f3e9});
- const line=(x1,z1,x2,z2,w=.15)=>squadPitchLine(pitchGroup,x1,z1,x2,z2,white,w);
- line(-38,-60,38,-60);line(-38,60,38,60);line(-38,-60,-38,60);line(38,-60,38,60);
- line(-38,0,38,0);
- line(-22,-60,-22,-42);line(22,-60,22,-42);line(-22,-42,22,-42);
- line(-22,60,-22,42);line(22,60,22,42);line(-22,42,22,42);
- line(-10,-60,-10,-52);line(10,-60,10,-52);line(-10,-52,10,-52);
- line(-10,60,-10,52);line(10,60,10,52);line(-10,52,10,52);
+ const grass=[0x14583b,0x1b6745],ground=new THREE.Mesh(new THREE.PlaneGeometry(120,76),new THREE.MeshStandardMaterial({color:grass[0],roughness:1}));
+ ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;pitchGroup.add(ground);
+ for(let i=0;i<12;i++){const stripe=new THREE.Mesh(new THREE.PlaneGeometry(10,76),new THREE.MeshStandardMaterial({color:grass[i%2],roughness:1}));stripe.rotation.x=-Math.PI/2;stripe.position.set(-55+i*10,.012,0);pitchGroup.add(stripe);}
+ const white=new THREE.MeshBasicMaterial({color:0xe9eee7});
+ const line=(x1,z1,x2,z2,w=.16)=>squadPitchLine(pitchGroup,x1,z1,x2,z2,white,w);
+ line(-60,-38,60,-38);line(-60,38,60,38);line(-60,-38,-60,38);line(60,-38,60,38);
+ line(0,-38,0,38);line(-60,-22,-42,-22);line(-42,-22,-42,22);line(-42,22,-60,22);line(60,-22,42,-22);line(42,-22,42,22);line(42,22,60,22);
+ line(-60,-10,-52,-10);line(-52,-10,-52,10);line(-52,10,-60,10);line(60,-10,52,-10);line(52,-10,52,10);line(52,10,60,10);
  const circle=new THREE.Mesh(new THREE.RingGeometry(9.05,9.2,64),white);circle.rotation.x=-Math.PI/2;circle.position.y=.06;pitchGroup.add(circle);
  const spotMat=new THREE.MeshBasicMaterial({color:0xf6f5e8});
- for(const z of [-48,48,0]){const dot=new THREE.Mesh(new THREE.CircleGeometry(.42,16),spotMat);dot.rotation.x=-Math.PI/2;dot.position.set(0,.065,z);pitchGroup.add(dot);}
- squad3DRenderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'low-power'});
- squad3DRenderer.setPixelRatio(Math.min(devicePixelRatio,1.5));squad3DRenderer.outputColorSpace=THREE.SRGBColorSpace;
- squad3DRenderer.shadowMap.enabled=true;squad3DRenderer.shadowMap.type=THREE.PCFSoftShadowMap;
- squad3DRenderer.domElement.className='squad-three-canvas';squad3DRenderer.domElement.setAttribute('aria-label','ملعب التشكيلة ثلاثي الأبعاد');
+ for(const x of [-48,48,0]){const dot=new THREE.Mesh(new THREE.CircleGeometry(.42,16),spotMat);dot.rotation.x=-Math.PI/2;dot.position.set(x,.065,0);pitchGroup.add(dot);}
+ const standMat=new THREE.MeshStandardMaterial({color:0x111c29,roughness:.9}),seatMat=new THREE.MeshStandardMaterial({color:0x344352,roughness:.8});
+ for(const side of [-1,1]){
+  const stand=new THREE.Mesh(new THREE.BoxGeometry(130,12,13),standMat);stand.position.set(0,4,side*48);pitchGroup.add(stand);
+  for(let r=0;r<5;r++){const row=new THREE.Mesh(new THREE.BoxGeometry(130,.55,2.2),seatMat);row.position.set(0,8+r*.65,side*(41+r*1.35));pitchGroup.add(row);}
+ }
+ for(const side of [-1,1]){const goal=new THREE.Group();pitchGroup.add(goal);const gx=side*60,gm=new THREE.MeshBasicMaterial({color:0xe9eee7});for(const [x,y,z,w,h,d] of [[gx,3.5,-3.7,.22,7,.22],[gx,3.5,3.7,.22,7,.22],[gx,7,0,.22,.22,7.4]]){const bar=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),gm);bar.position.set(x,y,z);goal.add(bar);}}
+ squad3DRenderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});
+ squad3DRenderer.setPixelRatio(Math.min(devicePixelRatio,1.5));squad3DRenderer.outputColorSpace=THREE.SRGBColorSpace;squad3DRenderer.shadowMap.enabled=true;
+ squad3DRenderer.domElement.className='squad-three-canvas';squad3DRenderer.domElement.setAttribute('aria-label','ملعب Ultimate Team ثلاثي الأبعاد');
  host.prepend(squad3DRenderer.domElement);
  squad3DResizeObserver=new ResizeObserver(()=>resizeSquadPitch3D());squad3DResizeObserver.observe(host);
  resizeSquadPitch3D();
@@ -195,18 +197,18 @@ function initSquadPitch3D(){
 function resizeSquadPitch3D(){
  if(!squad3DRenderer||!squad3DCamera)return;
  const host=$('#squad-pitch');if(!host)return;
- const w=Math.max(1,host.clientWidth),h=Math.max(1,host.clientHeight),aspect=w/h;
- const viewH=128,viewW=viewH*aspect;
- squad3DCamera.left=-viewW/2;squad3DCamera.right=viewW/2;squad3DCamera.top=viewH/2;squad3DCamera.bottom=-viewH/2;squad3DCamera.updateProjectionMatrix();
+ const w=Math.max(1,host.clientWidth),h=Math.max(1,host.clientHeight);
+ squad3DCamera.aspect=w/h;squad3DCamera.updateProjectionMatrix();
  squad3DRenderer.setSize(w,h,false);squad3DRenderer.render(squad3D,squad3DCamera);
 }
 function updateSquadPitch3D(){
  if(!$('#squad-pitch'))return;initSquadPitch3D();
+ // The formation is turned onto a wide FUT-style broadcast pitch.
  const coords=formationPresets[selectedFormation]||formationPresets['4-3-3'];
  formationSlots.forEach((slot,i)=>{
   const player=clubPlayers.find(p=>p.id===squadAssignments[slot]||p.name===squadAssignments[slot]);
   const old=squad3DPlayers.get(slot);if(old){squad3D.remove(old);squad3DPlayers.delete(slot);}
-  if(player){const model=makeSquadMiniPlayer(player,i);const [x,z]=coords[i]||[0,0];model.position.set(x,0,z);squad3D.add(model);squad3DPlayers.set(slot,model);}
+  if(player){const [x,z]=coords[i]||[0,0];const marker=new THREE.Mesh(new THREE.CircleGeometry(1.15,24),new THREE.MeshBasicMaterial({color:0x07131a,transparent:true,opacity:.48,depthWrite:false}));marker.rotation.x=-Math.PI/2;marker.position.set(z, .08, x);squad3D.add(marker);squad3DPlayers.set(slot,marker);}
  });
  resizeSquadPitch3D();
 }
@@ -601,7 +603,7 @@ function renderSquad(){
  updateSquadPitch3D();
  const select=$('#formation-select');if(select)select.value=selectedFormation;
  const coords=formationPresets[selectedFormation]||formationPresets['4-3-3'];
- $$('#squad-pitch [data-slot]').forEach((btn,i)=>{const player=clubPlayers.find(p=>p.id===squadAssignments[btn.dataset.slot]||p.name===squadAssignments[btn.dataset.slot]);const [x,z]=coords[i]||[0,0];btn.style.left=((x+38)/76*100)+'%';btn.style.top=((60+z)/120*100)+'%';btn.style.bottom='auto';btn.classList.toggle('selected',!!player);btn.innerHTML=player?'<span class="squad-token-rating">'+player.rating+'</span><span class="squad-token-position">'+player.position+'</span><span class="squad-token-name">'+player.name.split(' ').slice(-1)[0]+'</span>':'<span class="squad-token-empty">'+btn.dataset.slot+'</span>';});
+ $('#squad-pitch [data-slot]').forEach((btn,i)=>{const player=clubPlayers.find(p=>p.id===squadAssignments[btn.dataset.slot]||p.name===squadAssignments[btn.dataset.slot]);const [x,z]=coords[i]||[0,0];btn.style.left=((z+60)/120*100)+'%';btn.style.top=((x+38)/76*100)+'%';btn.style.bottom='auto';btn.classList.toggle('selected',!!player);btn.innerHTML=player?'<span class="squad-card-rating">'+player.rating+'</span><span class="squad-card-position">'+player.position+'</span>'+(player.image?'<img class="squad-card-art" src="'+player.image+'" alt="" loading="lazy" onerror="this.remove()">':'<span class="squad-card-silhouette">⚽</span>')+'<span class="squad-card-name">'+player.name.split(' ').slice(-1)[0]+'</span>':'<span class="squad-card-empty">'+btn.dataset.slot+'</span>';});
  const label=$('#formation-label');if(label)label.textContent=selectedFormation;renderBench();renderClubCollection();
  const ratings=Object.values(squadAssignments).map(n=>clubPlayers.find(p=>p.id===n||p.name===n)?.rating||0);const ratingLabel=document.querySelector('.page[data-page="squad"] .mode-count');if(ratingLabel)ratingLabel.textContent='التقييم '+(ratings.length?Math.round(ratings.reduce((a,b)=>a+b,0)/ratings.length):0);
  const count=formationSlots.filter(slot=>squadAssignments[slot]&&clubPlayers.some(p=>p.id===squadAssignments[slot]||p.name===squadAssignments[slot])).length;const gateNote=$('#squad-gate-note');if(gateNote)gateNote.textContent='التشكيلة: '+count+'/11 لاعب';
