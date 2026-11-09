@@ -500,3 +500,9 @@ body,.app-shell{background-color:transparent}
 .page[data-page="squad"] .pitch-board .player-dot{pointer-events:auto;cursor:pointer;touch-action:manipulation}
 .page[data-page="squad"] .pitch-board .squad-three-canvas{pointer-events:none}
 @media(max-width:600px){.page[data-page="squad"] #squad-picker{width:calc(100vw - 18px);max-height:82vh;padding:11px}.page[data-page="squad"] #squad-picker-list{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* Fix global UI click interception: keep the app above the hidden match canvas */
+#game-root.game-hidden{display:none!important;visibility:hidden!important;pointer-events:none!important}
+.app-shell:not(.hidden){position:relative;z-index:5;pointer-events:auto}
+.app-shell:not(.hidden) button,.app-shell:not(.hidden) a,.app-shell:not(.hidden) select,.app-shell:not(.hidden) input{pointer-events:auto}
+.welcome-screen:not(.hidden){position:relative;z-index:6;pointer-events:auto}
