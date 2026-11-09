@@ -489,3 +489,14 @@ body,.app-shell{background-color:transparent}
  .squad-card-rating{font-size:12px}.squad-card-position{font-size:7px;top:19px}.squad-card-name{font-size:7px}
  .page[data-page="squad"] .club-collection-list{display:flex}
 }
+
+/* Squad picker: visible, clickable overlay above the pitch and club list */
+.page[data-page="squad"] #squad-picker{position:fixed;z-index:120;left:50%;top:50%;transform:translate(-50%,-50%);width:min(720px,calc(100vw - 28px));max-height:min(78vh,680px);overflow:auto;margin:0;padding:16px;background:#081522f7;border:1px solid #e2c46e;border-radius:14px;box-shadow:0 24px 90px #000e;backdrop-filter:blur(14px)}
+.page[data-page="squad"] #squad-picker:not(.hidden){display:block!important}
+.page[data-page="squad"] #squad-picker-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:9px;max-height:58vh;overflow:auto;padding:4px}
+.page[data-page="squad"] #squad-picker-list .squad-pick-card{min-height:88px;cursor:pointer;pointer-events:auto}
+.page[data-page="squad"] #squad-picker-list .squad-pick-card img{width:58px;height:78px;object-fit:contain}
+.page[data-page="squad"] .pitch-board{position:relative}
+.page[data-page="squad"] .pitch-board .player-dot{pointer-events:auto;cursor:pointer;touch-action:manipulation}
+.page[data-page="squad"] .pitch-board .squad-three-canvas{pointer-events:none}
+@media(max-width:600px){.page[data-page="squad"] #squad-picker{width:calc(100vw - 18px);max-height:82vh;padding:11px}.page[data-page="squad"] #squad-picker-list{grid-template-columns:repeat(2,minmax(0,1fr))}}
