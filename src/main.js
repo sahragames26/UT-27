@@ -406,6 +406,27 @@ const quickMenu = $('#quick-menu');
 const matchHud = $('#match-hud');
 const matchControls = $('#match-controls');
 const difficultyPanel = $('#difficulty-panel');
+
+// Capture navigation clicks before any later screen initializer can interrupt setup.
+document.addEventListener('click', event => {
+  const target = event.target instanceof Element ? event.target : event.target?.parentElement;
+  if (!target) return;
+  const tabButton = target.closest('.tab-btn, .bottom-btn, .quick-items button[data-tab], [data-open-tab]');
+  if (tabButton) {
+    const tab = tabButton.dataset.tab || tabButton.dataset.openTab;
+    if (tab) { event.preventDefault(); event.stopImmediatePropagation(); switchTab(tab); return; }
+  }
+  if (target.closest('#quick-menu-toggle')) {
+    event.preventDefault(); event.stopImmediatePropagation();
+    quickMenu.classList.contains('hidden') ? openQuick() : closeQuick(); return;
+  }
+  if (target.closest('#close-quick')) {
+    event.preventDefault(); event.stopImmediatePropagation(); closeQuick(); return;
+  }
+  if (target.closest('#settings-shortcut')) {
+    event.preventDefault(); event.stopImmediatePropagation(); switchTab('settings');
+  }
+}, true);
 let selectedDifficulty = '';
 let coins = Number(localStorage.getItem('ut27-coins') || 5436);
 let currentTab = 'home';
@@ -666,9 +687,6 @@ function switchTab(tab) {
   if (tab === 'settings') $('#language-setting').value = localStorage.getItem('ut27-language') || 'ar';
   closeQuick();
 }
-$$('.tab-btn, .bottom-btn').forEach(btn => btn.addEventListener('click', () => switchTab(btn.dataset.tab)));
-$$('[data-open-tab]').forEach(btn => btn.addEventListener('click', () => switchTab(btn.dataset.openTab)));
-$('#settings-shortcut').addEventListener('click', () => switchTab('settings'));
 
 function openQuick() {
   activeQuickItems = $$('.quick-items button');
@@ -684,9 +702,6 @@ function moveQuick(delta) {
   activeQuickItems[quickIndex]?.scrollIntoView({block:'nearest'});
 }
 function chooseQuick() { if (!quickMenu.classList.contains('hidden')) activeQuickItems[quickIndex]?.click(); }
-$('#close-quick').addEventListener('click', closeQuick);
-$('#quick-menu-toggle').addEventListener('click', () => quickMenu.classList.contains('hidden') ? openQuick() : closeQuick());
-$$( '.quick-items button' ).forEach(btn => btn.addEventListener('click', () => switchTab(btn.dataset.tab)));
 let activeSbcChallenge='';
 let selectedSbcPlayers=[];
 function openSbcChallenge(card){
