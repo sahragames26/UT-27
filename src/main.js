@@ -85,14 +85,14 @@ const standMat=mat(0x111d2c),seatMats=[mat(0x273b52),mat(0x30465e),mat(0x1c3047)
 const crowdColors=[0x7fb9c8,0xd4b56c,0xc96868,0xeff1de,0x536c9a,0x65a68e];
 const crowdGeo=new THREE.SphereGeometry(.16,6,5),crowdDummy=new THREE.Object3D();
 for(const side of [-1,1]){
-  box(scene,13,12,124,side*48,4.5,0,standMat);
+  box(scene,13,12,124,side*54,4.5,0,standMat);
   for(let tier=0;tier<7;tier++){
     const row=new THREE.Mesh(new THREE.BoxGeometry(11,.55,122),seatMats[tier%seatMats.length]);
-    row.position.set(side*(42.2+tier*.82),6.3+tier*.9,0);scene.add(row);
+    row.position.set(side*(49.5+tier*.62),6.3+tier*.9,0);scene.add(row);
   }
   const crowd=new THREE.InstancedMesh(crowdGeo,mat(0xffffff),1250);crowd.instanceMatrix.setUsage(THREE.StaticDrawUsage);
   for(let n=0;n<1250;n++){
-    const row=n%10,col=Math.floor(n/10),z=-59+col*.96,x=side*(43.1+row*.72),y=7.25+row*.84;
+    const row=n%10,col=Math.floor(n/10),z=-59+col*.96,x=side*(50.1+row*.62),y=7.25+row*.84;
     crowdDummy.position.set(x,y,z);crowdDummy.scale.set(.85,.8,.85);crowdDummy.rotation.y=((n*17)%11)*.06;crowdDummy.updateMatrix();crowd.setMatrixAt(n,crowdDummy.matrix);
     crowd.setColorAt(n,new THREE.Color(crowdColors[(n*13+row*3)%crowdColors.length]));
   }
@@ -103,7 +103,7 @@ for(const side of [-1,1]){
     const pylon=box(scene,.5,18,.5,side*57,10,z,mat(0x26394c));
     box(scene,5,.42,2,side*57,19.2,z,mat(0xe8f6ff,.3));
   }
-  const canopy=new THREE.Mesh(new THREE.BoxGeometry(20,1.3,128),mat(0x17283b));canopy.position.set(side*51,20,0);scene.add(canopy);
+  const canopy=new THREE.Mesh(new THREE.BoxGeometry(20,1.3,128),mat(0x17283b));canopy.position.set(side*58,20,0);scene.add(canopy);
   for(let i=0;i<9;i++){
     const lamp=new THREE.Mesh(new THREE.BoxGeometry(1.2,.22,1.2),new THREE.MeshBasicMaterial({color:0xfff2cb}));
     lamp.position.set(side*(42+i*.95),19.2,Math.cos(i/8*Math.PI)*60);scene.add(lamp);
