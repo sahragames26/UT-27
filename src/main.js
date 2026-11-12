@@ -1,4 +1,18 @@
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
+
+const aiDifficultyProfiles = {
+  'مبتدئ': { pace:.56, pressers:1, pressDistance:.65, shotFrequency:.55, shotAccuracy:.5, keeperSkill:.34, shotCooldown:5.2 },
+  'هاوي': { pace:.68, pressers:2, pressDistance:.78, shotFrequency:.72, shotAccuracy:.62, keeperSkill:.46, shotCooldown:4.4 },
+  'نصف محترف': { pace:.78, pressers:2, pressDistance:.9, shotFrequency:.85, shotAccuracy:.7, keeperSkill:.56, shotCooldown:3.8 },
+  'محترف': { pace:.88, pressers:3, pressDistance:1, shotFrequency:1, shotAccuracy:.78, keeperSkill:.65, shotCooldown:3.2 },
+  'عالمي': { pace:.97, pressers:3, pressDistance:1.12, shotFrequency:1.08, shotAccuracy:.85, keeperSkill:.74, shotCooldown:2.8 },
+  'أسطوري': { pace:1.05, pressers:4, pressDistance:1.22, shotFrequency:1.16, shotAccuracy:.9, keeperSkill:.82, shotCooldown:2.4 },
+  'مطلق': { pace:1.12, pressers:4, pressDistance:1.34, shotFrequency:1.25, shotAccuracy:.94, keeperSkill:.88, shotCooldown:2.1 }
+};
+let activeAIProfile = aiDifficultyProfiles['هاوي'];
+let nextAIShootAt = 0;
 
 const root = document.querySelector('#game-root');
 const scene = new THREE.Scene();
@@ -85,9 +99,10 @@ const ballMark=new THREE.Mesh(new THREE.SphereGeometry(.365,16,12),new THREE.Mes
 
 function makePlayer(team,x,z,height=1.8,stats={},card=null){
  const group=new THREE.Group();scene.add(group);group.position.set(x,0,z);
+ const bodyGroup=new THREE.Group();group.add(bodyGroup);
  const home=team==='white',scale=height/1.8;
  const shirt=mat(home?0xf4f1e8:0x151b25),shorts=mat(home?0x26313a:0x090d14),skin=mat([0x8d5b3d,0xb9825c,0xd39a72,0x70462f][players.length%4]),socks=mat(home?0xf2f1e9:0x222a32),boots=mat(home?0xd8dce0:0xe3c35c,.42),trim=mat(home?0xa52b36:0x58b8c8);
- const sphere=(geo,material,x,y,z,sc=[1,1,1])=>{const m=new THREE.Mesh(geo,material);m.position.set(x,y,z);m.scale.set(...sc);m.castShadow=true;group.add(m);return m;};
+ const sphere=(geo,material,x,y,z,sc=[1,1,1])=>{const m=new THREE.Mesh(geo,material);m.position.set(x,y,z);m.scale.set(...sc);m.castShadow=true;bodyGroup.add(m);return m;};
  const capsule=(r,len,material)=>new THREE.Mesh(new THREE.CapsuleGeometry(r,len,5,10),material);
  const torso=sphere(new THREE.SphereGeometry(.3,16,12),shirt,0,.99*scale,0,[1.04*scale,1.42*scale,.72*scale]);
  sphere(new THREE.SphereGeometry(.25,14,10),shorts,0,.57*scale,0,[1,.68,.8]);
@@ -103,11 +118,11 @@ function makePlayer(team,x,z,height=1.8,stats={},card=null){
  const legs=[],arms=[];
  for(const side of [-1,1]){
   sphere(new THREE.SphereGeometry(.115*scale,12,10),shirt,side*.29*scale,1.25*scale,0,[1,.95,1]);
-  const armPivot=new THREE.Group();armPivot.position.set(side*.34*scale,1.23*scale,0);group.add(armPivot);
+  const armPivot=new THREE.Group();armPivot.position.set(side*.34*scale,1.23*scale,0);bodyGroup.add(armPivot);
   const upper=capsule(.075*scale,.24*scale,shirt);upper.position.set(side*.025*scale,-.15*scale,0);upper.rotation.z=side*-.12;armPivot.add(upper);
   const fore=capsule(.062*scale,.22*scale,skin);fore.position.set(side*.055*scale,-.39*scale,.04*scale);fore.rotation.z=side*-.08;armPivot.add(fore);
-  const hand=sphere(new THREE.SphereGeometry(.07*scale,10,8),skin,side*.4*scale,.68*scale,.06);group.remove(hand);armPivot.add(hand);hand.position.set(side*.07*scale,-.53*scale,.04*scale);arms.push(armPivot);
-  const legPivot=new THREE.Group();legPivot.position.set(side*.14*scale,.49*scale,0);group.add(legPivot);
+  const hand=sphere(new THREE.SphereGeometry(.07*scale,10,8),skin,side*.4*scale,.68*scale,.06);bodyGroup.remove(hand);armPivot.add(hand);hand.position.set(side*.07*scale,-.53*scale,.04*scale);arms.push(armPivot);
+  const legPivot=new THREE.Group();legPivot.position.set(side*.14*scale,.49*scale,0);bodyGroup.add(legPivot);
   const thigh=capsule(.09*scale,.22*scale,shorts);thigh.position.set(0,-.09*scale,0);legPivot.add(thigh);
   const shin=capsule(.062*scale,.25*scale,socks);shin.position.set(0,-.29*scale,.015*scale);legPivot.add(shin);
   const boot=sphere(new THREE.BoxGeometry(.16*scale,.105*scale,.29*scale),boots,0,-.48*scale,.09*scale);legPivot.add(boot);legs.push(legPivot);
@@ -115,9 +130,9 @@ function makePlayer(team,x,z,height=1.8,stats={},card=null){
  group.rotation.y=home?Math.PI:0;
  const selectionMarker=new THREE.Group();
  const markerRing=new THREE.Mesh(new THREE.TorusGeometry(.58,.055,8,40),new THREE.MeshBasicMaterial({color:0xffdf45,transparent:true,opacity:.98,depthTest:false}));markerRing.rotation.x=Math.PI/2;markerRing.position.y=.055;markerRing.renderOrder=20;selectionMarker.add(markerRing);
- const arrowGeometry=new THREE.BufferGeometry();arrowGeometry.setAttribute('position',new THREE.Float32BufferAttribute([0,2.85,0,0,2.5,0,-.2,2.68,0,0,2.5,0,.2,2.68,0,0,2.5,0],3));
+ const arrowGeometry=new THREE.BufferGeometry();arrowGeometry.setAttribute('position',new THREE.Float32BufferAttribute([0,2.5,0,0,2.15,0,-.2,2.33,0,0,2.15,0,.2,2.33,0,0,2.15,0],3));
  const arrow=new THREE.LineSegments(arrowGeometry,new THREE.LineBasicMaterial({color:0xffdf45,depthTest:false}));arrow.renderOrder=21;selectionMarker.add(arrow);selectionMarker.visible=false;group.add(selectionMarker);
- const player={group,team,card,cardName:card?.name||'',rating:card?.rating||70,homePosition:group.position.clone(),legs,arms,selectionMarker,phase:Math.random()*Math.PI*2,stats:{speed:stats.speed??7.2,strength:stats.strength??70,agility:stats.agility??70,stamina:stats.stamina??100,shoot:stats.shoot??70,pass:stats.pass??70},velocity:new THREE.Vector3(),height,hasBall:false};
+ const player={group,bodyGroup,team,card,cardName:card?.name||'',rating:card?.rating||70,homePosition:group.position.clone(),legs,arms,selectionMarker,phase:Math.random()*Math.PI*2,stats:{speed:stats.speed??7.2,strength:stats.strength??70,agility:stats.agility??70,stamina:stats.stamina??100,shoot:stats.shoot??70,pass:stats.pass??70},velocity:new THREE.Vector3(),height,hasBall:false};
  players.push(player);return player;
 }
 const players=[];
@@ -126,6 +141,16 @@ const formationPresets={"4-3-3":[[0,45],[-25,29],[-9,31],[9,31],[25,29],[0,17],[
 let selectedFormation=localStorage.getItem('ut27-formation')||'4-3-3';if(!formationPresets[selectedFormation])selectedFormation='4-3-3';
 let formationPoints=formationPresets[selectedFormation];
 let squad3D=null,squad3DRenderer=null,squad3DCamera=null,squad3DPlayers=new Map(),squad3DResizeObserver=null;
+let sharedPlayerGltf=null;
+function clonePlayerRig(height,team){
+ if(!sharedPlayerGltf)return null;
+ const rig=SkeletonUtils.clone(sharedPlayerGltf.scene);
+ const bounds=new THREE.Box3().setFromObject(rig),modelHeight=Math.max(.01,bounds.max.y-bounds.min.y),scale=height/modelHeight;
+ rig.scale.setScalar(scale);rig.position.y=-bounds.min.y*scale;
+ const colors=team==='white'?{shirt:0xb6293e,shorts:0x172433,socks:0xf2eee4,shoes:0xd8dce0}:{shirt:0x164c66,shorts:0x101923,socks:0x192631,shoes:0xe3c35c};
+ rig.traverse(node=>{if(!node.isMesh)return;node.castShadow=true;node.receiveShadow=true;const tint=material=>{const name=(material.name||'').toLowerCase(),color=name.includes('shirt')?colors.shirt:name.includes('pant')?colors.shorts:name.includes('sock')?colors.socks:name.includes('shoe')?colors.shoes:null;if(!color)return material;const next=material.clone();next.color.setHex(color);return next;};node.material=Array.isArray(node.material)?node.material.map(tint):tint(node.material);});
+ return rig;
+}
 function squadPitchLine(group,x1,z1,x2,z2,material,width=.14){
  const dx=x2-x1,dz=z2-z1,len=Math.hypot(dx,dz);
  const mesh=new THREE.Mesh(new THREE.BoxGeometry(width,.045,len),material);
@@ -142,6 +167,8 @@ function makeSquadMiniPlayer(player,index){
  const hair=new THREE.MeshStandardMaterial({color:pick([0x17191e,0x39261e,0x6b4930,0xb1a078,0x4b4b4b],15),roughness:.9});
  const shorts=new THREE.MeshStandardMaterial({color:0x172330,roughness:.8});
  const boot=new THREE.MeshStandardMaterial({color:pick([0xf0f1e9,0xd4b14d,0x20242b,0xe45d4f],19),roughness:.5});
+  const rig=clonePlayerRig(3.05,'white');
+  if(rig){group.add(rig);const shadow=new THREE.Mesh(new THREE.CircleGeometry(.68,20),new THREE.MeshBasicMaterial({color:0x07170f,transparent:true,opacity:.24,depthWrite:false}));shadow.rotation.x=-Math.PI/2;shadow.position.y=.035;group.add(shadow);return group;}
  const sphere=(r,mat,pos,scale)=>{const o=new THREE.Mesh(new THREE.SphereGeometry(r,12,10),mat);o.position.set(...pos);if(scale)o.scale.set(...scale);o.castShadow=true;group.add(o);return o;};
  const torso=new THREE.Mesh(new THREE.CapsuleGeometry(.48,.82,4,8),kit);torso.position.y=1.85;torso.castShadow=true;group.add(torso);
  const chest=new THREE.Mesh(new THREE.BoxGeometry(.82,.16,.54),trim);chest.position.set(0,2.1,0);group.add(chest);
@@ -208,7 +235,7 @@ function updateSquadPitch3D(){
  formationSlots.forEach((slot,i)=>{
   const player=clubPlayers.find(p=>p.id===squadAssignments[slot]||p.name===squadAssignments[slot]);
   const old=squad3DPlayers.get(slot);if(old){squad3D.remove(old);squad3DPlayers.delete(slot);}
-  if(player){const [x,z]=coords[i]||[0,0];const marker=new THREE.Mesh(new THREE.CircleGeometry(1.15,24),new THREE.MeshBasicMaterial({color:0x07131a,transparent:true,opacity:.48,depthWrite:false}));marker.rotation.x=-Math.PI/2;marker.position.set(z, .08, x);squad3D.add(marker);squad3DPlayers.set(slot,marker);}
+  if(player){const [x,z]=coords[i]||[0,0];const avatar=makeSquadMiniPlayer(player,i);avatar.position.set(z,.06,x);avatar.rotation.y=Math.PI;squad3D.add(avatar);squad3DPlayers.set(slot,avatar);}
  });
  resizeSquadPitch3D();
 }
@@ -219,6 +246,14 @@ function matchCardForSlot(slot){const name=savedMatchLineup[slot];return savedMa
 function matchStats(card){const s=card?.stats||[72,70,70,70,70,70];return{speed:(s[0]||72)/10,strength:s[5]||70,agility:s[3]||70,stamina:100,shoot:s[1]||70,pass:s[2]||70};}
 const white=formationPoints.map(([x,z],i)=>{const card=matchCardForSlot(formationSlots[i]);return makePlayer('white',x,z,i===0?1.9:1.8,matchStats(card),card);});
 const black=formationPoints.map(([x,z],i)=>makePlayer('black',-x,-z,i===0?1.9:1.8,{speed:6.8+(i%4)*.25,strength:70+(i%5)*3,agility:70+(i%6)*2,stamina:100,shoot:72+(i%5)*3,pass:70+(i%6)*3}));
+function attachPlayerRig(player){
+ const rig=clonePlayerRig(player.height,player.team);if(!rig)return;
+ player.bodyGroup.visible=false;player.group.add(rig);player.modelRig=rig;
+ const clips=sharedPlayerGltf.animations||[],run=clips.find(c=>/run|jog|walk/i.test(c.name)),idle=clips.find(c=>/idle|stand|breath/i.test(c.name))||run;
+ player.modelMixer=new THREE.AnimationMixer(rig);player.idleAction=idle?player.modelMixer.clipAction(idle):null;player.runAction=run?player.modelMixer.clipAction(run):player.idleAction;player.currentAction=player.idleAction;
+ if(player.currentAction)player.currentAction.play();
+}
+new GLTFLoader().load('./assets/player.glb',gltf=>{sharedPlayerGltf=gltf;players.forEach(attachPlayerRig);if(squad3DRenderer)updateSquadPitch3D();},undefined,error=>console.warn('تعذر تحميل موديل اللاعبين؛ سيستمر المجسم الاحتياطي.',error));
 function updatePlayerNameTag(p,card){
  if(p.nameTag){p.group.remove(p.nameTag);p.nameTag.material.map?.dispose();p.nameTag.material.dispose();p.nameTag=null;}
  if(!card)return;
@@ -228,7 +263,7 @@ function updatePlayerNameTag(p,card){
  ctx.fillStyle='#fff';ctx.font='bold 31px Arial';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(card.name+'  '+card.rating,256,48,490);
  const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;
  const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:texture,transparent:true,depthTest:false,depthWrite:false}));
- sprite.position.set(0,2.85,0);sprite.scale.set(2.8,.52,1);sprite.renderOrder=10;p.group.add(sprite);p.nameTag=sprite;
+  sprite.position.set(0,2.48,0);sprite.scale.set(2.8,.52,1);sprite.renderOrder=10;p.group.add(sprite);p.nameTag=sprite;
 }
 function applyMatchFormation(){formationPoints=formationPresets[selectedFormation]||formationPresets['4-3-3'];white.forEach((p,i)=>{const [x,z]=formationPoints[i];p.homePosition.set(x,0,z);p.group.position.set(x,0,z);});}
 function refreshMatchRoster(){savedMatchClub=(()=>{try{return JSON.parse(localStorage.getItem('ut27-club')||'[]')}catch{return []}})();savedMatchLineup=(()=>{try{return JSON.parse(localStorage.getItem('ut27-squad')||'{}')}catch{return {}}})();white.forEach((p,i)=>{const card=matchCardForSlot(formationSlots[i]);p.card=card;p.cardName=card?.name||'';p.rating=card?.rating||70;const s=matchStats(card);Object.assign(p.stats,s);updatePlayerNameTag(p,card);});}
@@ -358,9 +393,18 @@ function animate(){
  for(const p of white){if(p!==controlled){const support=ballOwner===controlled&&p.homePosition.z<controlled.group.position.z?-.12:.22;const target=p.homePosition.clone().lerp(ball.position,support);target.z=THREE.MathUtils.clamp(target.z,-39,46);moveToward(p,target,dt,p.stats.speed*.78);p.stats.stamina=Math.min(100,p.stats.stamina+2*dt);}}
  // AI presses in layers; the ball carrier attacks the goal while nearby teammates support.
  const blackCarrier=ballOwner?.team==='black'?ballOwner:null;
- const pressing=new Set(black.slice().sort((a,b)=>a.group.position.distanceTo(ball.position)-b.group.position.distanceTo(ball.position)).slice(0,blackCarrier?2:3));
- for(const p of black){let target;if(p===blackCarrier)target=new THREE.Vector3(THREE.MathUtils.clamp(-p.group.position.x*.22,-18,18),0,58);else if(pressing.has(p))target=ball.position.clone().add(new THREE.Vector3(0,0,-1.15));else target=p.homePosition.clone().lerp(ball.position,.1);moveToward(p,target,dt,p.stats.speed*.82);p.stats.stamina=Math.min(100,p.stats.stamina+1.5*dt);}
+ const pressing=new Set(black.slice().sort((a,b)=>a.group.position.distanceTo(ball.position)-b.group.position.distanceTo(ball.position)).slice(0,activeAIProfile.pressers));
+ for(const p of black){let target;if(p===blackCarrier){const lane=Math.sign(p.group.position.x||1);target=new THREE.Vector3(THREE.MathUtils.clamp(-p.group.position.x*.22+lane*2,-18,18),0,58);}else if(pressing.has(p)){const offset=ball.position.clone().sub(p.group.position).normalize().multiplyScalar(activeAIProfile.pressDistance*1.15);target=ball.position.clone().sub(offset);}else target=p.homePosition.clone().lerp(ball.position,.1*activeAIProfile.pressDistance);moveToward(p,target,dt,p.stats.speed*.82*activeAIProfile.pace);p.stats.stamina=Math.min(100,p.stats.stamina+1.5*dt);}
  if(ballOwner?.team==='black'&&elapsed<keeperRushUntil){const keeper=white[0];moveToward(keeper,new THREE.Vector3(ball.position.x,0,Math.min(54,ball.position.z+3)),dt,keeper.stats.speed*1.15);}
+  // Both goalkeepers track shots and can parry them before they cross the line.
+  if(!ballOwner&&Math.abs(ballVel.z)>.5){
+   const defendingWhite=ballVel.z>0,keeper=defendingWhite?white[0]:black[0],towardGoal=defendingWhite?1:-1;
+   if(ball.position.z*towardGoal>39&&ball.position.z*towardGoal<53){
+    const keeperX=THREE.MathUtils.clamp(ball.position.x*.72,-4.2,4.2);
+    moveToward(keeper,new THREE.Vector3(keeperX,0,towardGoal*47),dt,keeper.stats.speed*(defendingWhite?activeAIProfile.keeperSkill:.78));
+    if(Math.abs(ball.position.x-keeper.group.position.x)<1.25&&ball.position.y<2.25&&ball.position.y>.35&&Math.random()<activeAIProfile.keeperSkill){ballVel.z=-towardGoal*(5+Math.abs(ballVel.z)*.35);ballVel.x+=(ball.position.x-keeper.group.position.x)*1.1;ballVel.y=Math.max(2.2,ballVel.y);msg.textContent='تصدي رائع من الحارس!';}
+   }
+  }
  // Keep players inside the pitch
  for(const p of players){p.group.position.x=THREE.MathUtils.clamp(p.group.position.x,-36,36);p.group.position.z=THREE.MathUtils.clamp(p.group.position.z,-56,56);for(const q of players)if(q!==p&&q.team!==p.team)resolveDuel(p,q);}
  // Ball possession, close control and grounded/aerial ball physics.
@@ -370,7 +414,13 @@ function animate(){
   const sprintTouch=ballOwner===controlled&&sprinting?1.18:.78;
   const dribbleTarget=ballOwner.group.position.clone().addScaledVector(forward,sprintTouch);dribbleTarget.y=.34;
   ball.position.lerp(dribbleTarget,Math.min(1,dt*(ballOwner===controlled?18:13)));ballVel.set(0,0,0);
-  if(ballOwner.team==='black'&&ballOwner.group.position.z>37){const target=new THREE.Vector3(THREE.MathUtils.clamp(-ballOwner.group.position.x*.28,-4,4),0,-0);const dir=target.sub(ballOwner.group.position);dir.y=0;dir.normalize();ballOwner=null;ballVel.copy(dir.multiplyScalar(19));ballVel.y=3.4;msg.textContent='المنافس يسدد!';}
+   if(ballOwner.team==='black'&&ballOwner.group.position.z>24&&elapsed>=nextAIShootAt){
+    const threat=THREE.MathUtils.clamp((ballOwner.group.position.z-20)/35,.15,1);
+    if(Math.random()<dt*(.34+threat*.48)*activeAIProfile.shotFrequency){
+     const targetX=THREE.MathUtils.clamp(-ball.position.x*.24,-5.1,5.1)+(Math.random()-.5)*(5.5*(1-activeAIProfile.shotAccuracy));
+     const target=new THREE.Vector3(targetX,0,62),direction=target.sub(ball.position).normalize();ballOwner=null;ballVel.copy(direction.multiplyScalar(18+activeAIProfile.shotAccuracy*10));ballVel.y=2.2+activeAIProfile.shotAccuracy*1.4;nextAIShootAt=elapsed+activeAIProfile.shotCooldown;msg.textContent='المنافس يسدد!';
+    }
+   }
  }else{
   ballVel.y-=9.81*dt;ball.position.addScaledVector(ballVel,dt);
   if(ball.position.y<.36){ball.position.y=.36;if(ballVel.y<0)ballVel.y*=-.34;ballVel.x*=.985;ballVel.z*=.985;}
@@ -382,7 +432,7 @@ function animate(){
  const nextContext=ballOwner?.team==='white'?'attack':'defense';
  if(nextContext!==controlContext){controlContext=nextContext;updateTouchLabels();}
  // Animate running limbs from each player's actual movement.
- for(const p of players){const motion=Math.min(1,p.velocity.length()/4),stride=Math.sin(elapsed*(sprinting&&p===controlled?17:13)+p.phase)*motion*.72;p.legs[0].rotation.x=stride;p.legs[1].rotation.x=-stride;p.arms[0].rotation.x=-stride*.58;p.arms[1].rotation.x=stride*.58;p.group.position.y=Math.abs(Math.sin(elapsed*13+p.phase))*.045*motion; p.group.rotation.z=THREE.MathUtils.clamp(-p.velocity.length()*.012,-.08,.08);if(p.selectionMarker)p.selectionMarker.visible=p===controlled;}
+ for(const p of players){const motion=Math.min(1,p.velocity.length()/4),stride=Math.sin(elapsed*(sprinting&&p===controlled?17:13)+p.phase)*motion*.72;p.legs[0].rotation.x=stride;p.legs[1].rotation.x=-stride;p.arms[0].rotation.x=-stride*.58;p.arms[1].rotation.x=stride*.58;p.group.position.y=Math.abs(Math.sin(elapsed*13+p.phase))*.045*motion;p.group.rotation.z=THREE.MathUtils.clamp(-p.velocity.length()*.012,-.08,.08);if(p.selectionMarker)p.selectionMarker.visible=p===controlled;if(p.modelMixer){const next=p.velocity.length()>.8?p.runAction:p.idleAction;if(next&&next!==p.currentAction){next.reset().fadeIn(.18).play();p.currentAction?.fadeOut(.18);p.currentAction=next;}p.modelMixer.update(dt);}}
  // Goals
  if(Math.abs(ball.position.z)>58 && Math.abs(ball.position.x)<4.9 && ball.position.y<3.25){if(ball.position.z<0)scoreW++;else scoreB++;scoreEl.textContent=`${scoreW} - ${scoreB}`;msg.textContent='GOAL!';resetBall();}
  if(Math.abs(ball.position.x)>39||Math.abs(ball.position.z)>63){resetBall();}
@@ -741,6 +791,7 @@ $$( '[data-difficulty]' ).forEach(btn => btn.addEventListener('click', () => {
   $$('.difficulty-grid button').forEach(x => x.classList.remove('chosen'));
   btn.classList.add('chosen');
   selectedDifficulty = btn.dataset.difficulty;
+  activeAIProfile = aiDifficultyProfiles[selectedDifficulty] || aiDifficultyProfiles['هاوي'];
   $('#difficulty-note').textContent = `الصعوبة المختارة: ${selectedDifficulty}`;
   $('#start-match').disabled = false;
 }));
@@ -749,7 +800,7 @@ $('#start-match').addEventListener('click', () => {
   const filled=formationSlots.filter(slot=>squadAssignments[slot]&&clubPlayers.some(p=>p.id===squadAssignments[slot]||p.name===squadAssignments[slot])).length;
   if(filled<11){$('#difficulty-note').textContent='لازم تكمل الـ11 مركز في التشكيلة الأول.';return;}
   $('#difficulty-note').textContent = `بدأت المباراة على مستوى ${selectedDifficulty}`;
-  applyMatchFormation();resetBall();elapsed=0;scoreW=0;scoreB=0;controlled=white[9];scoreEl.textContent='0 - 0';clockEl.textContent='00:00';
+  applyMatchFormation();resetBall();elapsed=0;nextAIShootAt=0;scoreW=0;scoreB=0;controlled=white[9];scoreEl.textContent='0 - 0';clockEl.textContent='00:00';
   appShell.classList.add('hidden');
   gameRoot.classList.remove('game-hidden');
   matchHud.classList.remove('hidden');
@@ -864,3 +915,4 @@ addEventListener('keydown', e => {
   } else if (e.key === 'PageUp') shiftMainTab(-1);
   else if (e.key === 'PageDown') shiftMainTab(1);
 });
+
