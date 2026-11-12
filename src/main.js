@@ -1,6 +1,4 @@
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 
 const aiDifficultyProfiles = {
   'مبتدئ': { pace:.56, pressers:1, pressDistance:.65, shotFrequency:.55, shotAccuracy:.5, keeperSkill:.34, shotCooldown:5.2 },
@@ -13,11 +11,23 @@ const aiDifficultyProfiles = {
 };
 let activeAIProfile = aiDifficultyProfiles['هاوي'];
 let nextAIShootAt = 0;
+const playerPhysicalProfiles={
+ 'Lionel Messi':{heightCm:170,appearance:{skinColor:0xc98d65,hairColor:0x34251e,buildWidth:.94}},
+ 'Cristiano Ronaldo':{heightCm:187,appearance:{skinColor:0xd39a72,hairColor:0x211a17,buildWidth:1.02}},
+ 'Ousmane Dembélé':{heightCm:178,appearance:{skinColor:0x754832,hairColor:0x17191e,buildWidth:.94}},
+ 'Jude Bellingham':{heightCm:186,appearance:{skinColor:0x754832,hairColor:0x17191e,buildWidth:1.02}},
+ 'Pedri':{heightCm:174,appearance:{skinColor:0xd39a72,hairColor:0x39261e,buildWidth:.93}},
+ 'Luis Díaz':{heightCm:180,appearance:{skinColor:0xc98d65,hairColor:0x17191e,buildWidth:.98}},
+ 'Aitana Bonmatí':{heightCm:162,appearance:{skinColor:0xf0c9a4,hairColor:0x39261e,buildWidth:.9}},
+ 'Tabitha Chawinga':{heightCm:167,appearance:{skinColor:0x704832,hairColor:0x17191e,buildWidth:.94}},
+ 'Yui Hasegawa':{heightCm:157,appearance:{skinColor:0xf0c9a4,hairColor:0x17191e,buildWidth:.88}},
+ 'Ryan Gravenberch':{heightCm:190,appearance:{skinColor:0x754832,hairColor:0x17191e,buildWidth:1.04}}
+};
 
 const root = document.querySelector('#game-root');
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x8ab2c2);
-scene.fog = new THREE.Fog(0x8ab2c2, 65, 150);
+scene.background = new THREE.Color(0x101b2a);
+scene.fog = new THREE.Fog(0x101b2a, 105, 210);
 
 const camera = new THREE.PerspectiveCamera(52, innerWidth/innerHeight, 0.1, 320);
 camera.position.set(43, 9.5, 0);
@@ -32,14 +42,14 @@ renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.12;
 root.appendChild(renderer.domElement);
 
-scene.add(new THREE.HemisphereLight(0xd9efff, 0x31452b, 2.0));
-const sun = new THREE.DirectionalLight(0xfff1d6, 2.5);
-sun.position.set(-22, 38, 18); sun.castShadow = true;
-sun.shadow.mapSize.set(2048,2048); sun.shadow.camera.left=-48; sun.shadow.camera.right=48; sun.shadow.camera.top=42; sun.shadow.camera.bottom=-42;
+scene.add(new THREE.HemisphereLight(0xd8e9ff, 0x243727, 2.1));
+const sun = new THREE.DirectionalLight(0xffedcf, 3.0);
+sun.position.set(-24, 48, 22); sun.castShadow = true;
+sun.shadow.mapSize.set(2048,2048); sun.shadow.camera.left=-54; sun.shadow.camera.right=54; sun.shadow.camera.top=50; sun.shadow.camera.bottom=-50;
 scene.add(sun);
 
 const mat = (color, roughness=.8) => new THREE.MeshStandardMaterial({color, roughness});
-const grassMats = [mat(0x236d36), mat(0x28783b)];
+const grassMats = [mat(0x176637), mat(0x237945)];
 const field = new THREE.Group(); scene.add(field);
 const pitch = new THREE.Mesh(new THREE.PlaneGeometry(76, 120), grassMats[0]);
 pitch.rotation.x=-Math.PI/2; pitch.receiveShadow=true; field.add(pitch);
@@ -70,28 +80,42 @@ function goal(z){
  return g;
 }
 goal(-59.7);goal(59.7);
-// Instanced crowd seating gives the stadium a populated, layered 3D feel.
-const crowdGeo=new THREE.SphereGeometry(.22,6,5);
-const crowdMats=[mat(0x78919b),mat(0x9a7770),mat(0xd2c7a1),mat(0x456e69),mat(0x343d54)];
+// Night-match arena: layered stands, packed supporters, glowing LED boards and a roof canopy.
+const standMat=mat(0x111d2c),seatMats=[mat(0x273b52),mat(0x30465e),mat(0x1c3047)];
+const crowdColors=[0x7fb9c8,0xd4b56c,0xc96868,0xeff1de,0x536c9a,0x65a68e];
+const crowdGeo=new THREE.SphereGeometry(.16,6,5),crowdDummy=new THREE.Object3D();
 for(const side of [-1,1]){
- const crowd=new THREE.InstancedMesh(crowdGeo,crowdMats[0],420);
- const dummy=new THREE.Object3D();
- for(let n=0;n<420;n++){
-  const row=Math.floor(n/70),col=n%70;
-  dummy.position.set(side*(49+row*.8),7.1+row*.3,-57+col*1.62);
-  dummy.scale.set(.8,.8,.8);dummy.updateMatrix();crowd.setMatrixAt(n,dummy.matrix);
-  crowd.setColorAt(n,new THREE.Color([0x78919b,0x9a7770,0xd2c7a1,0x456e69,0x343d54][(n*7+row)%5]));
- }
- crowd.instanceMatrix.needsUpdate=true;scene.add(crowd);
+  box(scene,13,12,124,side*48,4.5,0,standMat);
+  for(let tier=0;tier<7;tier++){
+    const row=new THREE.Mesh(new THREE.BoxGeometry(11,.55,122),seatMats[tier%seatMats.length]);
+    row.position.set(side*(42.2+tier*.82),6.3+tier*.9,0);scene.add(row);
+  }
+  const crowd=new THREE.InstancedMesh(crowdGeo,mat(0xffffff),1250);crowd.instanceMatrix.setUsage(THREE.StaticDrawUsage);
+  for(let n=0;n<1250;n++){
+    const row=n%10,col=Math.floor(n/10),z=-59+col*.96,x=side*(43.1+row*.72),y=7.25+row*.84;
+    crowdDummy.position.set(x,y,z);crowdDummy.scale.set(.85,.8,.85);crowdDummy.rotation.y=((n*17)%11)*.06;crowdDummy.updateMatrix();crowd.setMatrixAt(n,crowdDummy.matrix);
+    crowd.setColorAt(n,new THREE.Color(crowdColors[(n*13+row*3)%crowdColors.length]));
+  }
+  crowd.instanceMatrix.needsUpdate=true;crowd.instanceColor.needsUpdate=true;scene.add(crowd);
+  box(scene,1.1,1.6,119,side*39.3,1.1,0,mat(0x24d8bb,.38));
+  box(scene,1,1,126,side*51,13.8,0,mat(0x080f19));
+  for(const z of [-50,-25,0,25,50]){
+    const pylon=box(scene,.5,18,.5,side*57,10,z,mat(0x26394c));
+    box(scene,5,.42,2,side*57,19.2,z,mat(0xe8f6ff,.3));
+  }
+  const canopy=new THREE.Mesh(new THREE.BoxGeometry(20,1.3,128),mat(0x17283b));canopy.position.set(side*51,20,0);scene.add(canopy);
+  for(let i=0;i<9;i++){
+    const lamp=new THREE.Mesh(new THREE.BoxGeometry(1.2,.22,1.2),new THREE.MeshBasicMaterial({color:0xfff2cb}));
+    lamp.position.set(side*(42+i*.95),19.2,Math.cos(i/8*Math.PI)*60);scene.add(lamp);
+  }
 }
-// Low-profile stadium stands and floodlight towers
-const standMat=mat(0x34424a), seatMat=mat(0x66747a);
-for(const side of [-1,1]){
-  box(scene,9,8,124,side*57,3,0,standMat);
-  for(let r=0;r<5;r++) box(scene,9,.24,124,side*(52+r*.95),7.2+r*.28,0,seatMat);
-  for(const z of [-46,-16,16,46]){box(scene,.4,20,.4,side*63,10,z,mat(0x25343a));box(scene,4.5,.3,2.2,side*63,20,z,mat(0xe9f3ff));}
+for(const z of [-64,64]){
+  box(scene,84,8,8,0,4,z,standMat);
+  box(scene,76,1.1,1,0,8.4,z,mat(0x34485d));
 }
-for(const z of [-64,64]) box(scene,84,6,6,0,2,z,standMat);
+// A large central video board anchors the stadium skyline.
+box(scene,1,9,24,0,22,-67,mat(0x07111c));
+box(scene,.28,7.4,20,0,22,-66.4,new THREE.MeshBasicMaterial({color:0x173a51}));
 
 const ball = new THREE.Mesh(new THREE.SphereGeometry(.36,24,18),mat(0xf7f7f2,.35));
 ball.castShadow=true;ball.position.set(0,.38,0);scene.add(ball);
@@ -100,15 +124,23 @@ const ballMark=new THREE.Mesh(new THREE.SphereGeometry(.365,16,12),new THREE.Mes
 function makePlayer(team,x,z,height=1.8,stats={},card=null){
  const group=new THREE.Group();scene.add(group);group.position.set(x,0,z);
  const bodyGroup=new THREE.Group();group.add(bodyGroup);
- const home=team==='white',scale=height/1.8;
- const shirt=mat(home?0xf4f1e8:0x151b25),shorts=mat(home?0x26313a:0x090d14),skin=mat([0x8d5b3d,0xb9825c,0xd39a72,0x70462f][players.length%4]),socks=mat(home?0xf2f1e9:0x222a32),boots=mat(home?0xd8dce0:0xe3c35c,.42),trim=mat(home?0xa52b36:0x58b8c8);
+ const home=team==='white',scale=height/1.8,profile=playerPhysicalProfiles[card?.name]||{},appearance={...profile.appearance,...card?.appearance};
+ const buildWidth=appearance.buildWidth||THREE.MathUtils.clamp(.96+((stats.strength||70)-70)*.003,.88,1.1);
+ bodyGroup.scale.set(buildWidth,1,THREE.MathUtils.clamp(.98+(buildWidth-1)*.5,.92,1.06));
+ const shirt=mat(home?0xf4f1e8:0x151b25),shorts=mat(home?0x26313a:0x090d14),skin=mat(appearance.skinColor||[0x8d5b3d,0xb9825c,0xd39a72,0x70462f][players.length%4]),hair=mat(appearance.hairColor||[0x191513,0x30231b,0x6b4228][players.length%3]),socks=mat(home?0xf2f1e9:0x222a32),boots=mat(home?0xd8dce0:0xe3c35c,.42),trim=mat(home?0xa52b36:0x58b8c8);
  const sphere=(geo,material,x,y,z,sc=[1,1,1])=>{const m=new THREE.Mesh(geo,material);m.position.set(x,y,z);m.scale.set(...sc);m.castShadow=true;bodyGroup.add(m);return m;};
  const capsule=(r,len,material)=>new THREE.Mesh(new THREE.CapsuleGeometry(r,len,5,10),material);
  const torso=sphere(new THREE.SphereGeometry(.3,16,12),shirt,0,.99*scale,0,[1.04*scale,1.42*scale,.72*scale]);
  sphere(new THREE.SphereGeometry(.25,14,10),shorts,0,.57*scale,0,[1,.68,.8]);
  sphere(new THREE.CylinderGeometry(.075*scale,.085*scale,.14*scale,10),skin,0,1.37*scale,0);
  sphere(new THREE.SphereGeometry(.17*scale,20,16),skin,0,1.57*scale,.015);
- sphere(new THREE.SphereGeometry(.178*scale,16,10,0,Math.PI*2,0,Math.PI*.55),mat([0x191513,0x30231b,0x6b4228][players.length%3]),0,1.65*scale,-.005);
+ sphere(new THREE.SphereGeometry(.178*scale,16,10,0,Math.PI*2,0,Math.PI*.55),hair,0,1.65*scale,-.005);
+ if(card?.name==='Lionel Messi'){
+  sphere(new THREE.SphereGeometry(.145*scale,14,10,0,Math.PI*2,0,Math.PI*.42),hair,0,1.48*scale,.145*scale,[1,.55,.65]);
+  sphere(new THREE.SphereGeometry(.065*scale,10,8),hair,-.09*scale,1.48*scale,.14*scale,[.7,1,.55]);
+  sphere(new THREE.SphereGeometry(.065*scale,10,8),hair,.09*scale,1.48*scale,.14*scale,[.7,1,.55]);
+ }
+ if(card?.name==='Cristiano Ronaldo')sphere(new THREE.SphereGeometry(.12*scale,12,8),hair,0,1.72*scale,-.025,[1,.28,.72]);
  sphere(new THREE.SphereGeometry(.035*scale,10,8),skin,-.177*scale,1.57*scale,0,[.65,1,1]);
  sphere(new THREE.SphereGeometry(.035*scale,10,8),skin,.177*scale,1.57*scale,0,[.65,1,1]);
  const eyeMat=mat(0x211a17,.35);
@@ -141,16 +173,6 @@ const formationPresets={"4-3-3":[[0,45],[-25,29],[-9,31],[9,31],[25,29],[0,17],[
 let selectedFormation=localStorage.getItem('ut27-formation')||'4-3-3';if(!formationPresets[selectedFormation])selectedFormation='4-3-3';
 let formationPoints=formationPresets[selectedFormation];
 let squad3D=null,squad3DRenderer=null,squad3DCamera=null,squad3DPlayers=new Map(),squad3DResizeObserver=null;
-let sharedPlayerGltf=null;
-function clonePlayerRig(height,team){
- if(!sharedPlayerGltf)return null;
- const rig=SkeletonUtils.clone(sharedPlayerGltf.scene);
- const bounds=new THREE.Box3().setFromObject(rig),modelHeight=Math.max(.01,bounds.max.y-bounds.min.y),scale=height/modelHeight;
- rig.scale.setScalar(scale);rig.position.y=-bounds.min.y*scale;
- const colors=team==='white'?{shirt:0xb6293e,shorts:0x172433,socks:0xf2eee4,shoes:0xd8dce0}:{shirt:0x164c66,shorts:0x101923,socks:0x192631,shoes:0xe3c35c};
- rig.traverse(node=>{if(!node.isMesh)return;node.castShadow=true;node.receiveShadow=true;const tint=material=>{const name=(material.name||'').toLowerCase(),color=name.includes('shirt')?colors.shirt:name.includes('pant')?colors.shorts:name.includes('sock')?colors.socks:name.includes('shoe')?colors.shoes:null;if(!color)return material;const next=material.clone();next.color.setHex(color);return next;};node.material=Array.isArray(node.material)?node.material.map(tint):tint(node.material);});
- return rig;
-}
 function squadPitchLine(group,x1,z1,x2,z2,material,width=.14){
  const dx=x2-x1,dz=z2-z1,len=Math.hypot(dx,dz);
  const mesh=new THREE.Mesh(new THREE.BoxGeometry(width,.045,len),material);
@@ -167,8 +189,6 @@ function makeSquadMiniPlayer(player,index){
  const hair=new THREE.MeshStandardMaterial({color:pick([0x17191e,0x39261e,0x6b4930,0xb1a078,0x4b4b4b],15),roughness:.9});
  const shorts=new THREE.MeshStandardMaterial({color:0x172330,roughness:.8});
  const boot=new THREE.MeshStandardMaterial({color:pick([0xf0f1e9,0xd4b14d,0x20242b,0xe45d4f],19),roughness:.5});
-  const rig=clonePlayerRig(3.05,'white');
-  if(rig){group.add(rig);const shadow=new THREE.Mesh(new THREE.CircleGeometry(.68,20),new THREE.MeshBasicMaterial({color:0x07170f,transparent:true,opacity:.24,depthWrite:false}));shadow.rotation.x=-Math.PI/2;shadow.position.y=.035;group.add(shadow);return group;}
  const sphere=(r,mat,pos,scale)=>{const o=new THREE.Mesh(new THREE.SphereGeometry(r,12,10),mat);o.position.set(...pos);if(scale)o.scale.set(...scale);o.castShadow=true;group.add(o);return o;};
  const torso=new THREE.Mesh(new THREE.CapsuleGeometry(.48,.82,4,8),kit);torso.position.y=1.85;torso.castShadow=true;group.add(torso);
  const chest=new THREE.Mesh(new THREE.BoxGeometry(.82,.16,.54),trim);chest.position.set(0,2.1,0);group.add(chest);
@@ -244,16 +264,9 @@ let savedMatchClub=(()=>{try{return JSON.parse(localStorage.getItem('ut27-club')
 let savedMatchLineup=(()=>{try{return JSON.parse(localStorage.getItem('ut27-squad')||'{}')}catch{return {}}})();
 function matchCardForSlot(slot){const name=savedMatchLineup[slot];return savedMatchClub.find(p=>p.id===name||p.name===name)||null;}
 function matchStats(card){const s=card?.stats||[72,70,70,70,70,70];return{speed:(s[0]||72)/10,strength:s[5]||70,agility:s[3]||70,stamina:100,shoot:s[1]||70,pass:s[2]||70};}
-const white=formationPoints.map(([x,z],i)=>{const card=matchCardForSlot(formationSlots[i]);return makePlayer('white',x,z,i===0?1.9:1.8,matchStats(card),card);});
-const black=formationPoints.map(([x,z],i)=>makePlayer('black',-x,-z,i===0?1.9:1.8,{speed:6.8+(i%4)*.25,strength:70+(i%5)*3,agility:70+(i%6)*2,stamina:100,shoot:72+(i%5)*3,pass:70+(i%6)*3}));
-function attachPlayerRig(player){
- const rig=clonePlayerRig(player.height,player.team);if(!rig)return;
- player.bodyGroup.visible=false;player.group.add(rig);player.modelRig=rig;
- const clips=sharedPlayerGltf.animations||[],run=clips.find(c=>/run|jog|walk/i.test(c.name)),idle=clips.find(c=>/idle|stand|breath/i.test(c.name))||run;
- player.modelMixer=new THREE.AnimationMixer(rig);player.idleAction=idle?player.modelMixer.clipAction(idle):null;player.runAction=run?player.modelMixer.clipAction(run):player.idleAction;player.currentAction=player.idleAction;
- if(player.currentAction)player.currentAction.play();
-}
-new GLTFLoader().load('./assets/player.glb',gltf=>{sharedPlayerGltf=gltf;players.forEach(attachPlayerRig);if(squad3DRenderer)updateSquadPitch3D();},undefined,error=>console.warn('تعذر تحميل موديل اللاعبين؛ سيستمر المجسم الاحتياطي.',error));
+const white=formationPoints.map(([x,z],i)=>{const card=matchCardForSlot(formationSlots[i]),profile=playerPhysicalProfiles[card?.name]||{},height=(card?.heightCm||profile.heightCm)?(card.heightCm||profile.heightCm)/100:(i===0?1.9:1.8);return makePlayer('white',x,z,height,matchStats(card),card);});
+const blackHeights=[1.9,1.78,1.86,1.81,1.74,1.88,1.76,1.83,1.79,1.87,1.72];
+const black=formationPoints.map(([x,z],i)=>makePlayer('black',-x,-z,blackHeights[i],{speed:6.8+(i%4)*.25,strength:70+(i%5)*3,agility:70+(i%6)*2,stamina:100,shoot:72+(i%5)*3,pass:70+(i%6)*3}));
 function updatePlayerNameTag(p,card){
  if(p.nameTag){p.group.remove(p.nameTag);p.nameTag.material.map?.dispose();p.nameTag.material.dispose();p.nameTag=null;}
  if(!card)return;
@@ -510,6 +523,8 @@ $$('[data-language]').forEach(btn => btn.addEventListener('click', () => {
 
 
 const eventPlayers = [
+  {name:"Lionel Messi",rating:92,position:"RW",featured:true,club:"Inter Miami",competition:"ICON",heightCm:170,stats:[80,88,91,92,32,64]},
+  {name:"Cristiano Ronaldo",rating:92,position:"ST",featured:true,club:"Al Nassr",competition:"ICON",heightCm:187,stats:[82,92,78,86,34,77]},
   {name:"Ousmane Dembélé",rating:91,position:"ST",featured:true,club:"Paris SG",competition:"UCL",stats:[91,90,85,94,56,71]},
   {name:"Jude Bellingham",rating:91,position:"CAM",featured:true,club:"Real Madrid",competition:"UCL",stats:[80,90,87,91,81,86]},
   {name:"Pedri",rating:91,position:"CM",featured:true,club:"Barcelona",competition:"UCL",stats:[80,81,91,92,82,81]},
